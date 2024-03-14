@@ -5,6 +5,8 @@ mahjong_tile_elements = {
     20: '0s', 21: '1s', 22: '2s', 23: '3s', 24: '4s', 25: '5s', 26: '6s', 27: '7s', 28: '8s', 29: '9s',
     30: 'dong', 31: 'nan', 32: 'xi', 33: 'bei',
     40: 'bai', 41: 'fa', 42: 'zhong'}
+    # using 0, 10, 20 to represent red tile, but when calculating chi, pong, gang,
+    # and hu they should be consider as itself + 5
 
 all_tiles = []
 
