@@ -8,6 +8,8 @@ mahjong_tile_elements = {
     # using 0, 10, 20 to represent red tile, but when calculating chi, pong, gang,
     # and hu they should be consider as itself + 5
 
+find_num_using_tile = {v: k for k, v in mahjong_tile_elements.items()}
+
 all_tiles = []
 
 # generate all the tiles appear in a single game from all tile elements

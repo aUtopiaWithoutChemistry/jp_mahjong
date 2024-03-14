@@ -28,7 +28,6 @@ def guo_shi(tiles):
 
 
 def regular_win(tiles):
-    if contains_double(tiles)
     return False
 
 
