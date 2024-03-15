@@ -64,7 +64,7 @@ class player:
             >>> player1.my_tiles = [1, 1, 1, 1, 2, 3, 4]
             >>> three_con = player1. x_continously(3)
             >>> three_con()
-            True
+            False
             >>> four_con = player1. x_continously(4)
             >>> four_con()
             True
@@ -73,13 +73,16 @@ class player:
         test_tiles = [x for x in self.my_tiles]
         def func():
             cnt = 1
+            cnt_max = 1
             for n in range(len(test_tiles) - 1):
                 if test_tiles[n] == test_tiles[n + 1]:
                     cnt += 1
-                    if cnt == x:
-                        return True
+                    if cnt > cnt_max:
+                        cnt_max = cnt
                 else:
                     cnt = 1
+            if cnt_max == x:
+                return True
             return False
         return func
 
@@ -108,6 +111,7 @@ class game:
     this_game = []
     players = []
 
+
     def __init__(self, total_chang, total_player):
         # decide how many chang in total should be played
         self.total_chang = total_chang
@@ -119,6 +123,7 @@ class game:
         # create n players
         for n in range(total_player):
             self.players.append(player)
+
 
     def next_round(self):
         random.shuffle(self.this_game)
