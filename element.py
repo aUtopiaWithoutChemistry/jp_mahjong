@@ -10,15 +10,19 @@ mahjong_tile_elements = {
 
 find_num_using_tile = {v: k for k, v in mahjong_tile_elements.items()}
 
-all_tiles = []
 
 # generate all the tiles appear in a single game from all tile elements
-for ele in mahjong_tile_elements:
-    if ele == 0 or ele == 10 or ele == 20:
-        all_tiles.append(ele)
-    elif ele == 5 or ele == 15 or ele == 25: 
-        for i in range(3):
+def generate_tiles():
+    all_tiles = []
+    for ele in mahjong_tile_elements:
+        if ele == 0 or ele == 10 or ele == 20:
             all_tiles.append(ele)
-    else:
-        for i in range(4):
-            all_tiles.append(ele)
+        elif ele == 5 or ele == 15 or ele == 25: 
+            for i in range(3):
+                all_tiles.append(ele)
+        else:
+            for i in range(4):
+                all_tiles.append(ele)
+    return all_tiles
+
+all_tiles = generate_tiles()

@@ -9,10 +9,12 @@ class player:
     my_position = -1
     my_waste = []
 
+
     def __init__(self, score, tiles, position):
         self.score = score
         self.my_tiles = tiles
         self.my_position = position
+
 
     def mopai(self, this_game):
         ''' remove the first item in this_game and add into my_tiles
@@ -27,6 +29,7 @@ class player:
         '''
         self.my_tiles.append(this_game.pop(0))
         self.my_tiles.sort()
+
 
     def discard(self):
         ''' remove the selected item from player's tiles and move it 
@@ -52,10 +55,48 @@ class player:
         tile_num = find_num_using_tile[discard_tile]
         self.my_waste.append(self.my_tiles.pop(self.my_tiles.index(tile_num)))
 
+
+    def x_continously(self, x):
+        ''' return a function to test are there x continously tiles in
+            a players tiles, if there have x tiles ,then the return 
+            function will return True, vice versa
+            >>> player1 = player(25000, [], 0)
+            >>> player1.my_tiles = [1, 1, 1, 1, 2, 3, 4]
+            >>> three_con = player1. x_continously(3)
+            >>> three_con()
+            True
+            >>> four_con = player1. x_continously(4)
+            >>> four_con()
+            True
+
+        '''
+        test_tiles = [x for x in self.my_tiles]
+        def func():
+            cnt = 1
+            for n in range(len(test_tiles) - 1):
+                if test_tiles[n] == test_tiles[n + 1]:
+                    cnt += 1
+                    if cnt == x:
+                        return True
+                else:
+                    cnt = 1
+            return False
+        return func
+
+
+    def hidden_gang(self):
+        return False
+
+
+    def gang(self, current_tile):
+        return False
+
+
     def chi(self, current_tile):
         if current_tile[1] == (self.my_position - 1) or current_tile[1] == (self.my_position + 3):
             if current_tile < 30 and current_tile == self.my_tiles:
                 return False
+
 
 # table class，包含四个玩家和剩余牌
 class game:
