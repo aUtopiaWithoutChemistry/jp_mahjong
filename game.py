@@ -62,10 +62,10 @@ class player:
             function will return True, vice versa
             >>> player1 = player(25000, [], 0)
             >>> player1.my_tiles = [1, 1, 1, 1, 2, 3, 4]
-            >>> three_con = player1. x_continously(3)
+            >>> three_con = player1.x_continously(3)
             >>> three_con()
             False
-            >>> four_con = player1. x_continously(4)
+            >>> four_con = player1.x_continously(4)
             >>> four_con()
             True
 
@@ -88,11 +88,42 @@ class player:
 
 
     def hidden_gang(self):
-        return False
+        ''' check if have hidden gang using my tiles
+
+            >>> player1 = player(25000, [], 0)
+            >>> player1.my_tiles = [1, 1, 1, 1, 2, 3, 4, 5, 6, 7, 8, 9, 30, 30]
+            >>> player1.hidden_gang()
+            True
+            >>> player1.my_tiles = [1, 1, 1, 2, 3, 4, 5, 5, 6, 7, 8, 9, 9, 9]
+            >>> player1.hidden_gang()
+            False
+        '''
+        four_con = self.x_continously(4)
+        if four_con():
+            return True
+        else:
+            return False
 
 
     def gang(self, current_tile):
-        return False
+        ''' check if could gang using other's waste tile
+
+            >>> player1 = player(25000, [], 0)
+            >>> player1.my_tiles = [1, 1, 1, 2, 3, 4, 5, 5, 6, 7, 8, 9, 9]
+            >>> current_tile = 1
+            >>> player1.gang(current_tile)
+            True
+            >>> player1.my_tiles = [1, 1, 2, 2, 3, 4, 5, 5, 6, 7, 8, 9, 9]
+            >>> player1.gang(current_tile)
+            False
+        '''
+        self.my_tiles.append(current_tile)
+        self.my_tiles.sort()
+        four_con = self.x_continously(4)
+        if four_con():
+            return True
+        else:
+            return False
 
 
     def chi(self, current_tile):
