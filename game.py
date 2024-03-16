@@ -1,5 +1,6 @@
 import random
 from element import all_tiles, mahjong_tile_elements, find_num_using_tile
+from rules import x_continously
 
 # player class，包含属性：点数、手牌、自风、弃牌，
 # 函数：摸牌✅、弃牌✅、吃、碰、杠、和、立直、加杠
@@ -56,35 +57,7 @@ class player:
         self.my_waste.append(self.my_tiles.pop(self.my_tiles.index(tile_num)))
 
 
-    def x_continously(self, x):
-        ''' return a function to test are there x continously tiles in
-            a players tiles, if there have x tiles ,then the return 
-            function will return True, vice versa
-            >>> player1 = player(25000, [], 0)
-            >>> player1.my_tiles = [1, 1, 1, 1, 2, 3, 4]
-            >>> three_con = player1.x_continously(3)
-            >>> three_con(1)
-            False
-            >>> four_con = player1.x_continously(4)
-            >>> four_con(1)
-            True
-
-        '''
-        test_tiles = [x for x in self.my_tiles]
-        def func(tile):
-            cnt = 1
-            cnt_max = 1
-            for n in range(len(test_tiles) - 1):
-                if test_tiles[n] == test_tiles[n + 1] and test_tiles[n] == tile:
-                    cnt += 1
-                    if cnt > cnt_max:
-                        cnt_max = cnt
-                else:
-                    cnt = 1
-            if cnt_max == x:
-                return True
-            return False
-        return func
+    
 
 
     def hidden_gang(self):
@@ -99,7 +72,7 @@ class player:
             False
         '''
         for tile in self.my_tiles:
-            four_con = self.x_continously(4)
+            four_con = x_continously(self.my_tiles, 4)
             if four_con(tile):
                 return True
         return False
@@ -119,7 +92,7 @@ class player:
         '''
         self.my_tiles.append(current_tile)
         self.my_tiles.sort()
-        four_con = self.x_continously(4)
+        four_con = x_continously(self.my_tiles, 4)
         if four_con(current_tile):
             return True
         else:
@@ -140,7 +113,7 @@ class player:
         '''
         self.my_tiles.append(current_tile)
         self.my_tiles.sort()
-        three_con = self.x_continously(3)
+        three_con = x_continously(self.my_tiles, 3)
         if three_con(current_tile):
             return True
         else:
