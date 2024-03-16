@@ -1,9 +1,9 @@
 import random
 from element import all_tiles, mahjong_tile_elements, find_num_using_tile
-from rules import x_continously
+from rules import x_continously, win
 
 # player class，包含属性：点数、手牌、自风、弃牌，
-# 函数：摸牌✅、弃牌✅、吃、碰、杠、和、立直、加杠
+# 函数：摸牌✅、弃牌✅、吃、碰、杠、立直、加杠
 class player:
     score = 0 # should start with 25000
     my_tiles = [] # store all tiles of a player
@@ -91,10 +91,7 @@ class player:
         self.my_tiles.append(current_tile)
         self.my_tiles.sort()
         four_con = x_continously(self.my_tiles, 4)
-        if four_con(current_tile):
-            return True
-        else:
-            return False
+        return True if four_con(current_tile) else False
 
 
     def peng(self, current_tile):
@@ -117,6 +114,28 @@ class player:
         else:
             return False
 
+
+    def richi(self, this_game):
+        ''' richi means player needs only one tile to win the game, after the player 
+            richi, then this player must automatically drop the new tile if he can't win
+            with this tile
+
+            >>> player1 = player(25000, [], 0)
+            >>> player1.my_tiles = [1, 1, 1, 2, 3, 4, 5, 6, 7, 8, 9, 9, 9, 41]
+            >>> for ele in player1.my_tiles:
+            ...     all_tiles.remove(ele)
+            >>> this_game = all_tiles
+            >>> player1.richi(this_game)
+            True
+        '''
+        test_tiles = [tile for tile in self.my_tiles]
+        for tile in range(len(test_tiles)):
+            for ele in this_game:
+                test_tiles.pop(tile)
+                test_tiles.append(ele)
+                if win(test_tiles):
+                    return True
+        return False
 
     def chi(self, current_tile):
         if current_tile[1] == (self.my_position - 1) or current_tile[1] == (self.my_position + 3):
@@ -145,7 +164,7 @@ class game:
 
         # create n players
         for n in range(total_player):
-            self.players.append(player)
+            self.players.append(player(25000, [], n))
 
 
     def next_round(self):

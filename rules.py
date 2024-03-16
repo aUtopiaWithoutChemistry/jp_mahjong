@@ -189,7 +189,7 @@ def overlapping(tiles):
             return False
     tiles_set = list(set(tiles))
 
-    if shun_zi(tiles_set):
+    if len(tiles_set) > 2 and shun_zi(tiles_set):
         for i in range(3):
             tiles.remove(tiles_set[i])
     return True if shun_zi(tiles) else False
