@@ -167,6 +167,34 @@ def double(tiles):
     return True if tiles[0] == tiles[1] else False
 
 
+def overlapping(tiles):
+    ''' sometimes there will be overlapping in tiles, which makes shun_zi cannot detect
+        them, but ther are still valid, some overlapping even can get higher score, like
+        yibeikou [1, 1, 2, 2, 3, 3]
+
+        >>> tiles = [1, 1, 2, 2, 3, 3]
+        >>> overlapping(tiles)
+        True
+        >>> tiles = [3, 4, 4, 5, 0, 6]
+        >>> overlapping(tiles)
+        True
+        >>> tiles = [41, 41, 42, 42, 43, 43]
+        >>> overlapping (tiles)
+        False
+    '''
+    tiles = deal_red(tiles)
+    tiles.sort()
+    for tile in tiles:
+        if tile > 30:
+            return False
+    tiles_set = list(set(tiles))
+
+    if shun_zi(tiles_set):
+        for i in range(3):
+            tiles.remove(tiles_set[i])
+    return True if shun_zi(tiles) else False
+
+
 def composition(tiles):
     ''' return a number represent how the tiles composed, for a regular win, it should
         contains 1 double and 4 mianzi(kezi or shunzi), and the return value of this 
@@ -183,14 +211,19 @@ def composition(tiles):
         >>> tiles = [41, 41, 41, 42, 42, 42, 43, 43, 43, 0, 5, 10, 15, 15]
         >>> composition(tiles)
         14
-        >>> tiles = [1, 1, 1, 2, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6]
+        >>> tiles = [1, 1, 1, 2, 2, 2, 3, 3, 42, 42, 5, 5, 6, 6]
         >>> composition(tiles)
         42
+        >>> tiles = [1, 1, 2, 2, 3, 3, 4, 5, 0, 6, 6, 7, 41, 41]
+        >>> composition(tiles)
+        14
     '''
     if tiles == []:
         return 0
     elif len(tiles) > 2 and (shun_zi(tiles[:3]) or ke_zi(tiles[:3])):
         cnt, tiles = 1, tiles[3:]
+    elif len(tiles) > 5 and overlapping(tiles[:6]):
+        cnt, tiles = 2, tiles[6:]
     elif len(tiles) > 1 and double(tiles[:2]):
         cnt, tiles = 10, tiles[2:]
     else:
