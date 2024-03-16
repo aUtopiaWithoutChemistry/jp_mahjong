@@ -9,6 +9,7 @@ class player:
     my_tiles = [] # store all tiles of a player
     my_position = -1
     my_waste = []
+    chi_pong_gang_tiles = []
 
 
     def __init__(self, score, tiles, position):
@@ -55,9 +56,6 @@ class player:
         discard_tile = '1m'
         tile_num = find_num_using_tile[discard_tile]
         self.my_waste.append(self.my_tiles.pop(self.my_tiles.index(tile_num)))
-
-
-    
 
 
     def hidden_gang(self):
