@@ -19,7 +19,7 @@ def seven_double(tiles):
 
 
 def guo_shi(tiles):
-    standard_guo_shi = [1, 9, 11, 19, 21, 29, 30, 31, 32, 33, 40, 41, 42]
+    standard_guo_shi = [1, 9, 11, 19, 21, 29, 31, 32, 33, 34, 41, 42, 43]
     cur_tiles = tiles
     for i in range(len(standard_guo_shi)):
         if standard_guo_shi[i] not in cur_tiles:
@@ -28,6 +28,22 @@ def guo_shi(tiles):
 
 
 def split_tiles(cond):
+    ''' to split all tiles in to five type of tiles, ease the following judgement
+
+        >>> tiles = [0, 5, 8, 8, 8, 41, 41, 41, 42, 42, 42, 43, 43, 43]
+        >>> split_man = split_tiles(man)
+        >>> new_tiles = split_man(tiles)
+        >>> new_tiles
+        [0, 5, 8, 8, 8]
+        >>> split_feng = split_tiles(feng)
+        >>> new_tiles = split_feng(tiles)
+        >>> new_tiles
+        []
+        >>> split_man = split_tiles(sanyuan)
+        >>> new_tiles = split_man(tiles)
+        >>> new_tiles
+        [41, 41, 41, 42, 42, 42, 43, 43, 43]
+    '''
     def func(tiles):
         sub_list = [tile for tile in tiles if cond(tile)]
         return sub_list
@@ -45,10 +61,10 @@ def suo(tile):
     return True if tile > 19 and tile < 30 else False
 
 def feng(tile):
-    return True if tile > 29 and tile < 34 else False
+    return True if tile > 30 and tile < 35 else False
 
 def sanyuan(tile):
-    return True if tile > 39 and tile < 43 else False
+    return True if tile > 40 and tile < 44 else False
 
 
 # return a function that judge if there are x same tiles in a list
@@ -82,15 +98,24 @@ def x_continously(my_tiles, x):
         return func
 
 
+def deal_red(tiles):
+    for i in range(len(tiles)):
+        if tiles[i] % 10 == 0:
+            tiles[i] += 5
+    return tiles
+
+
 def shun_zi(tiles):
     return False
 
 
-def ke_zi(tiles):
-    for tile in tiles:
-        if x_continously(tiles, 3)(tile):
-            return True 
+def ke_zi(tiles):  
+    return True if tiles[0] == tiles[1] and tiles[1] == tiles[2] else False
+
+
+def double(tiles):
     return False
+
 
 
 def regular_win(tiles):
