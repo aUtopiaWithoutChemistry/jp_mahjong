@@ -1,12 +1,10 @@
-# rules during the game
-
-
 # rules for winning
+def win(tiles):
+    return True if special_win(tiles) or regular_win(tiles) else False
+
+
 def special_win(tiles):
-    #if tiles
-    if seven_double(tiles) or guo_shi(tiles):
-        return True
-    return False
+    return True if seven_double(tiles) or guo_shi(tiles) else False
 
 
 def seven_double(tiles):
@@ -69,33 +67,33 @@ def sanyuan(tile):
 
 # return a function that judge if there are x same tiles in a list
 def x_continously(my_tiles, x):
-        ''' return a function to test are there x continously tiles in
-            a players tiles, if there have x tiles ,then the return 
-            function will return True, vice versa
-            >>> my_tiles = [1, 1, 1, 1, 2, 3, 4]
-            >>> three_con = x_continously(my_tiles, 3)
-            >>> three_con(1)
-            False
-            >>> four_con = x_continously(my_tiles, 4)
-            >>> four_con(1)
-            True
+    ''' return a function to test are there x continously tiles in
+        a players tiles, if there have x tiles ,then the return 
+        function will return True, vice versa
+        >>> my_tiles = [1, 1, 1, 1, 2, 3, 4]
+        >>> three_con = x_continously(my_tiles, 3)
+        >>> three_con(1)
+        False
+        >>> four_con = x_continously(my_tiles, 4)
+        >>> four_con(1)
+        True
 
-        '''
-        test_tiles = [x for x in my_tiles]
-        def func(tile):
-            cnt = 1
-            cnt_max = 1
-            for n in range(len(test_tiles) - 1):
-                if test_tiles[n] == test_tiles[n + 1] and test_tiles[n] == tile:
-                    cnt += 1
-                    if cnt > cnt_max:
-                        cnt_max = cnt
-                else:
-                    cnt = 1
-            if cnt_max == x:
-                return True
-            return False
-        return func
+    '''
+    test_tiles = [x for x in my_tiles]
+    def func(tile):
+        cnt = 1
+        cnt_max = 1
+        for n in range(len(test_tiles) - 1):
+            if test_tiles[n] == test_tiles[n + 1] and test_tiles[n] == tile:
+                cnt += 1
+                if cnt > cnt_max:
+                    cnt_max = cnt
+            else:
+                cnt = 1
+        if cnt_max == x:
+            return True
+        return False
+    return func
 
 
 def deal_red(tiles):
@@ -137,6 +135,7 @@ def shun_zi(tiles):
 
 def ke_zi(tiles):
     ''' ke_zi is three adjacent tiles have the same value
+
         >>> tiles = [10, 15, 15]
         >>> ke_zi(tiles)
         True
@@ -152,25 +151,58 @@ def ke_zi(tiles):
 
 
 def double(tiles):
-    return False
+    ''' double is nesscery for win in jp mahjong
 
+        >>> tiles = [0, 5]
+        >>> double(tiles)
+        True
+        >>> tiles = [43, 43]
+        >>> double(tiles)
+        True
+        >>> tiles = [42, 41]
+        >>> double(tiles)
+        False
+    '''
+    tiles = deal_red(tiles)
+    return True if tiles[0] == tiles[1] else False
+
+
+def composition(tiles):
+    ''' return a number represent how the tiles composed, for a regular win, it should
+        contains 1 double and 4 mianzi(kezi or shunzi), and the return value of this 
+        combination is 14. However, if get a non-14 number, it can also reflect the 
+        current composition of tiles. first digit shows how many double, second digit
+        shows how many mianzi
+
+        >>> tiles = [1, 1, 1, 2, 3, 4, 5, 5, 6, 7, 8, 9, 9, 9]
+        >>> composition(tiles)
+        14
+        >>> tiles = [1, 1, 1, 1, 2, 3, 4, 5, 6, 7, 8, 9, 30, 30]
+        >>> composition(tiles)
+        14
+        >>> tiles = [41, 41, 41, 42, 42, 42, 43, 43, 43, 0, 5, 10, 15, 15]
+        >>> composition(tiles)
+        14
+        >>> tiles = [1, 1, 1, 2, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6]
+        >>> composition(tiles)
+        42
+    '''
+    if tiles == []:
+        return 0
+    elif len(tiles) > 2 and (shun_zi(tiles[:3]) or ke_zi(tiles[:3])):
+        cnt, tiles = 1, tiles[3:]
+    elif len(tiles) > 1 and double(tiles[:2]):
+        cnt, tiles = 10, tiles[2:]
+    else:
+        return composition(tiles[1:])
+    return cnt + composition(tiles)
 
 
 def regular_win(tiles):
-    mian_zi = 0
-    que_tou = 0
-    man_check = split_tiles(man)
-    ping_check = split_tiles(ping)
-    suo_check = split_tiles(suo)
-    man_list = man_check(tiles)
-    ping_list = ping_check(tiles)
-    suo_list = suo_check(tiles)
-    
-    return False
+    ''' if the composition of tiles conform to 14, then the player wins
 
-
-def contains_double(tiles):
-    for i in range(12):
-        if tiles[i] == tiles[i + 1]:
-            return True
-        
+        >>> tiles = [41, 41, 41, 42, 42, 42, 43, 43, 43, 0, 5, 10, 15, 15]
+        >>> regular_win(tiles)
+        True
+    '''
+    return True if composition(tiles) == 14 else False
