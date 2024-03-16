@@ -99,6 +99,15 @@ def x_continously(my_tiles, x):
 
 
 def deal_red(tiles):
+    ''' there are three red baopai in mahjong, they are special during counting score,
+        but they are just considered as 5 man or ping or suo, we need to convert them
+        from 0, 10, 20 to 5, 15, 25 during the judgement of win
+
+        >>> tiles = [0, 5, 5]
+        >>> new_tiles = deal_red(tiles)
+        >>> new_tiles
+        [5, 5, 5]
+    '''
     for i in range(len(tiles)):
         if tiles[i] % 10 == 0:
             tiles[i] += 5
@@ -106,10 +115,39 @@ def deal_red(tiles):
 
 
 def shun_zi(tiles):
-    return False
+    ''' shun_zi is three adjacent tiles have the relationship of [n, n + 1, n + 2]
+
+        >>> tiles = [4, 5, 6]
+        >>> shun_zi(tiles)
+        True
+        >>> tiles = [0, 4, 6]
+        >>> shun_zi(tiles)
+        True
+        >>> tiles = [41, 42, 43]
+        >>> shun_zi(tiles)
+        False
+    '''
+    tiles = deal_red(tiles)
+    tiles.sort()
+    for tile in tiles:
+        if tile > 30:
+            return False
+    return True if tiles[0] + 1 == tiles[1] and tiles[1] + 1 == tiles[2] else False
 
 
-def ke_zi(tiles):  
+def ke_zi(tiles):
+    ''' ke_zi is three adjacent tiles have the same value
+        >>> tiles = [10, 15, 15]
+        >>> ke_zi(tiles)
+        True
+        >>> tiles = [41, 41, 41]
+        >>> ke_zi(tiles)
+        True
+        >>> tiles = [41, 42, 43]
+        >>> ke_zi(tiles)
+        False
+    '''
+    tiles = deal_red(tiles)
     return True if tiles[0] == tiles[1] and tiles[1] == tiles[2] else False
 
 
