@@ -3,7 +3,7 @@ def clear_win(tiles):
     return True if special_win(tiles) or regular_win(tiles) else False
 
 
-def chi_pong_gang_win(tiles, chi_pong_gang_tiles):
+def chi_peng_gang_win(tiles, chi_peng_gang_tiles):
     return False
 
 

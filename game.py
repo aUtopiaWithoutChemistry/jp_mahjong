@@ -1,6 +1,6 @@
 import random
 from element import all_tiles, mahjong_tile_elements, find_num_using_tile
-from rules import x_continously, win, deal_red
+from rules import x_continously, clear_win, deal_red
 
 # player class，包含属性：点数、手牌、自风、弃牌，
 # 函数：摸牌✅、弃牌✅、吃、碰、杠、暗杠、立直、加杠
@@ -10,7 +10,12 @@ class player:
     my_tiles = [] # store all tiles of a player
     my_position = -1
     my_waste = []
-    chi_pong_gang_tiles = []
+    ''' tiles in chi_peng_gang_tiles will store in group, like
+            [[0, [1, 2, 3]], [1, [5, 5, 0]], [2, [41, 41, 41, 41]], [3, [42, 42, 42, 42]]]
+        each group contains two elements, the first represent it's type, 0 is chi, 1 is peng, 
+        2 is gang, 3 is add_gang. the second element is a list shows all the tiles in this group.
+    '''
+    chi_peng_gang_tiles = []
 
 
     def __init__(self, score, tiles, position):
@@ -97,7 +102,25 @@ class player:
         return True if four_con(current_tile[0]) else False
     
 
-    def check_add_gang(self, current_tile):
+    def check_add_gang(self):
+        ''' add_gang means player have one ke_zi in chi_pong_gang_tiles, and get the same tile
+            as the tiles in ke_zi, then the player can add_gang, put this new tile into his 
+            chi_pong_gang_tiles and get a new tile
+
+            >>> player1 = player(25000, [], 0)
+            >>> player1.chi_peng_gang_tiles = [[1, [5, 0, 5]]]
+            >>> player1.my_tiles = [1, 1, 2, 2, 3, 5, 9]
+            >>> player1.check_add_gang()
+            True
+            >>> player1.chi_peng_gang_tiles = [[1, [4, 4, 4]]]
+            >>> player1.check_add_gang()
+            False
+        '''
+        tiles = deal_red(self.my_tiles)
+        for group in self.chi_peng_gang_tiles:
+            check_group = deal_red(group[1])
+            if group[0] == 1 and (check_group[0] in tiles):
+                return True
         return False
 
 
@@ -143,7 +166,7 @@ class player:
             for ele in this_game:
                 test_tiles.pop(tile)
                 test_tiles.append(ele)
-                if win(test_tiles):
+                if clear_win(test_tiles):
                     return True
         return False
 
@@ -157,6 +180,12 @@ class player:
             >>> player1.my_tiles = [2, 3, 0, 6, 7]
             >>> player1.check_chi(current_tile)
             True
+            >>> player1.my_tiles = [1, 2, 3, 3, 5, 5]
+            >>> player1.check_chi(current_tile)
+            True
+            >>> player1.my_tiles = [3, 3, 6]
+            >>> player1.check_chi(current_tile)
+            False
         '''
         if current_tile[1] == (self.my_position - 1) or current_tile[1] == (self.my_position + 3):
             tile_type = current_tile[0] // 10
