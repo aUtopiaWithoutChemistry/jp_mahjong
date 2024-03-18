@@ -1,6 +1,7 @@
 import random
 from element import all_tiles, mahjong_tile_elements, find_num_using_tile
 from rules import x_continously, clear_win, deal_red
+from player import player
 
 # table class，包含四个玩家和剩余牌
 class game:
@@ -23,7 +24,7 @@ class game:
 
         # create n players
         for n in range(total_player):
-            self.players.append(player(25000, [], n))
+            self.players.append(player(25000, [], n, False))
 
 
     def next_round(self):
