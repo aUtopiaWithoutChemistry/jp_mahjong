@@ -1,4 +1,4 @@
-# idnetify all the possible tiles in mahjong
+# the value of tile and its corrisponding meaning 
 mahjong_tile_elements = {
     0: '0m', 1: '1m', 2: '2m', 3: '3m', 4: '4m', 5: '5m', 6: '6m', 7: '7m', 8: '8m', 9: '9m',
     10: '0p', 11: '1p', 12: '2p', 13: '3p', 14: '4p', 15: '5p', 16: '6p', 17: '7p', 18: '8p', 19: '9p',
@@ -26,3 +26,20 @@ def generate_tiles():
     return all_tiles
 
 all_tiles = generate_tiles()
+
+
+all_tiles_new = []
+
+mahjong_tile_elements_new = {
+    1: '1m', 2: '2m', 3: '3m', 4: '4m', 5: '5m', 6: '6m', 7: '7m', 8: '8m', 9: '9m',
+    11: '1p', 12: '2p', 13: '3p', 14: '4p', 15: '5p', 16: '6p', 17: '7p', 18: '8p', 19: '9p',
+    21: '1s', 22: '2s', 23: '3s', 24: '4s', 25: '5s', 26: '6s', 27: '7s', 28: '8s', 29: '9s',
+    31: 'dong', 32: 'nan', 33: 'xi', 34: 'bei',
+    41: 'bai', 42: 'fa', 43: 'zhong'
+}
+
+key_list = list(mahjong_tile_elements_new.keys())
+
+for id in range(136):
+    value = key_list[id // 4]
+    all_tiles_new.append((value ,id))
