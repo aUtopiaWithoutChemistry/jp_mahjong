@@ -2,9 +2,9 @@ import random
 from element import all_tiles, mahjong_tile_elements, find_num_using_tile
 from rules import x_continously, clear_win, deal_red
 
-# player class，包含属性：点数、手牌、自风、弃牌，
-# 函数：摸牌✅、弃牌✅、吃、碰、杠、暗杠、立直、加杠
-#               check:吃、碰、杠、暗杠、立直、加杠
+# player class，包含属性：点数、手牌、自风、弃牌堆、是否为AI、吃碰杠堆
+# 函数：摸牌✅、弃牌✅、吃、碰、加杠、杠、暗杠、立直
+#              check:吃、碰、加杠、杠、暗杠、立直
 class player:
     is_AI = False
     score = 0 # should start with 25000
@@ -19,10 +19,11 @@ class player:
     chi_peng_gang_tiles = []
 
 
-    def __init__(self, score, tiles, position):
+    def __init__(self, score, tiles, position, is_AI):
         self.score = score
         self.my_tiles = tiles
         self.my_position = position
+        self.is_AI = is_AI
 
 
     # all the movement can be done by players
@@ -40,8 +41,8 @@ class player:
         self.my_tiles.append(this_game.pop(0))
         self.my_tiles.sort()
 
-
-    def discard(self):
+    # human movements
+    def human_discard(self):
         ''' remove the selected item from player's tiles and move it 
             into waste tiles
         '''
@@ -49,15 +50,14 @@ class player:
         for tile in range(len(self.my_tiles)):
             print(mahjong_tile_elements[self.my_tiles[tile]], end = " ")
         print('')
-        # this is original 
         discard_tile = input("Please select which tiles to discard: ")
-        # discard_tile = '1m'
         tile_num = find_num_using_tile[discard_tile]
         self.my_waste.append(self.my_tiles.pop(self.my_tiles.index(tile_num)))
 
 
-    def chi(self, current_tile):
-        '''
+    def human_chi(self, current_tile):
+        ''' if player on your left side discard a tile that can used by you to build a shun_zi
+            then you can chi, and move the shun_zi in to your chi_peng_gang_tiles
         '''
         combination = self.check_chi(current_tile)
         if combination != 0:
@@ -66,14 +66,20 @@ class player:
                 combo = []
                 type = current_tile[0] // 10
                 test_tiles = [tile for tile in self.my_tiles if (tile // 10) == type]
-                if (current_tile[0] - 2 in test_tiles) and (current_tile[0] - 1 in test_tiles):
-                    combo += [[current_tile[0] - 2, current_tile[0] - 1, current_tile[0]]]
-                if (current_tile[0] - 1 in test_tiles) and (current_tile[0] + 1 in test_tiles):
-                    combo += [[current_tile[0] - 1, current_tile[0], current_tile[0] + 1]]
-                if (current_tile[0] + 1 in test_tiles) and (current_tile[0] + 2 in test_tiles):
-                    combo += [[current_tile[0], current_tile[0] + 1, current_tile[0] + 2]]
-                which = input("Which combo you want to Chi? " + ' '.join(str(item) for item in combo))
-                self.my_waste += [0, combo[int(which)]]
+                test_tiles = deal_red(test_tiles)
+                test_tiles.sort()
+                test_tile = current_tile[0] if (current_tile[0] % 10) != 0 else current_tile[0] + 5
+                if (test_tile - 2 in test_tiles) and (test_tile - 1 in test_tiles):
+                    combo += [[test_tile - 2, test_tile - 1, test_tile]]
+                if (test_tile - 1 in test_tiles) and (test_tile + 1 in test_tiles):
+                    combo += [[test_tile - 1, test_tile, test_tile + 1]]
+                if (test_tile + 1 in test_tiles) and (test_tile + 2 in test_tiles):
+                    combo += [[test_tile, test_tile + 1, test_tile + 2]]
+                which = input("Which combo you want to Chi? " + ' '.join(str(item) for item in combo) + ' ')
+                self.chi_peng_gang_tiles += [0, combo[int(which)]]
+
+
+    # AI movements
 
 
     # check if a movement is valid 
@@ -154,7 +160,7 @@ class player:
         test_tiles = deal_red(test_tiles)
         test_tiles.sort()
         three_con = x_continously(test_tiles, 3)
-        if current_tile[0] // 10 == 0:
+        if current_tile[0] % 10 == 0:
             return True if three_con(current_tile[0] + 5) else False
         else:
             return True if three_con(current_tile[0]) else False
