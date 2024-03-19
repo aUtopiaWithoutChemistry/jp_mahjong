@@ -1,8 +1,11 @@
+from element import tiles_to_value
+
 # rules for winning
 def clear_win(tiles):
     return True if special_win(tiles) or regular_win(tiles) else False
 
 
+# TODO
 def chi_peng_gang_win(tiles, chi_peng_gang_tiles):
     return False
 
@@ -14,17 +17,17 @@ def special_win(tiles):
 def seven_double(tiles):
     if len(tiles) == 0:
         return True
-    elif tiles[1] != tiles[0]:
+    elif tiles[1][0] != tiles[0][0]:
         return False
     else:
         return seven_double(tiles[2:])  
 
 
 def guo_shi(tiles):
+    tiles = tiles_to_value(tiles)
     standard_guo_shi = [1, 9, 11, 19, 21, 29, 31, 32, 33, 34, 41, 42, 43]
-    cur_tiles = tiles
     for i in range(len(standard_guo_shi)):
-        if standard_guo_shi[i] not in cur_tiles:
+        if standard_guo_shi[i] not in tiles:
             return False
     return True
 
