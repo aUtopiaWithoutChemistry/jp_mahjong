@@ -26,7 +26,8 @@ class player:
         self.is_AI = is_AI
 
 
-    # all the movement can be done by players
+    # all the movement can be done by players integraded both
+    # human and AI
     def mopai(self, this_game):
         ''' remove the first item in this_game and add into my_tiles
 
@@ -40,6 +41,35 @@ class player:
         '''
         self.my_tiles.append(this_game.pop(0))
         self.my_tiles.sort()
+
+    
+    def discard():
+        return False
+
+
+    def chi():
+        return False
+    
+
+    def peng():
+        return False
+    
+
+    def gang():
+        return False
+    
+
+    def add_gang():
+        return False
+
+
+    def hidden_gang():
+        return False
+
+
+    def riichi():
+        return False
+    
 
     # human movements
     def human_discard(self):
@@ -166,9 +196,9 @@ class player:
             return True if three_con(current_tile[0]) else False
 
 
-    def check_richi(self, this_game):
-        ''' richi means player needs only one tile to win the game, after the player 
-            richi, then this player must automatically drop the new tile if he can't win
+    def check_riichi(self, this_game):
+        ''' riichi means player needs only one tile to win the game, after the player 
+            riichi, then this player must automatically drop the new tile if he can't win
             with this tile
 
             >>> player1 = player(25000, [], 0)
@@ -176,7 +206,7 @@ class player:
             >>> for ele in player1.my_tiles:
             ...     all_tiles.remove(ele)
             >>> this_game = all_tiles
-            >>> player1.check_richi(this_game)
+            >>> player1.check_riichi(this_game)
             True
         '''
         test_tiles = [tile for tile in self.my_tiles]
