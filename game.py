@@ -23,13 +23,17 @@ class game:
             self.this_game.append(ele)
 
         # shuffle all the tiles
-        self.next_round()
+        self.shuffle()
 
         # create n players
         for n in range(total_player):
             self.players.append(player(25000, [], n, False))
 
 
-    def next_round(self):
+    def shuffle(self):
         random.shuffle(self.this_game)
 
+
+    def ju(self):
+        while(len(self.this_game != 0)):
+            return False
