@@ -5,7 +5,7 @@ from player import player
 
 # table class，包含四个玩家和剩余牌
 class game:
-    current_tile = (-1, -1) # the first number shows the tile, second shows where it from
+    current_tile = ((-1, -1), -1) # the first tuple shows the tile, second shows where it from
     current_player = -1 # how many players in there
     total_chang = 0
     cur_chang = 0
@@ -21,6 +21,9 @@ class game:
         # add all mahjong tiles in this game
         for ele in all_tiles:
             self.this_game.append(ele)
+
+        # shuffle all the tiles
+        self.next_round()
 
         # create n players
         for n in range(total_player):
