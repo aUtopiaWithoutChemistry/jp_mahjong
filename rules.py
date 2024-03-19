@@ -1,6 +1,10 @@
 from element import tiles_to_value
 
 # rules for winning
+def win(tiles, chi_peng_gang_tiles):
+    return True if clear_win(tiles) or chi_peng_gang_win(tiles, chi_peng_gang_tiles) else False
+
+
 def clear_win(tiles):
     return True if special_win(tiles) or regular_win(tiles) else False
 
