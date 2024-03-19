@@ -43,3 +43,43 @@ key_list = list(mahjong_tile_elements.keys())
 for id in range(136):
     value = key_list[id // 4]
     all_tiles.append((value ,id))
+
+red_dora_id = [19, 55, 91]
+
+
+def tiles_to_value(tiles):
+    ''' This helper function can help previous written methods that based on ver -1.0's tiles
+        representation smoothly transit to current version.
+        from [(5, 16), (5, 19), (5, 17), (15, 55), (25, 91)]
+        to   [0, 5, 5, 10, 20]
+    '''
+    cur_tiles1 = [tile[0] for tile in tiles if tile[1] not in red_dora_id]
+    cur_tiles2 = [tile[0] - 5 for tile in tiles if tile[1] in red_dora_id]
+    cur_tiles = cur_tiles1 + cur_tiles2
+    cur_tiles.sort()
+    return cur_tiles
+
+
+def value_to_tiles(simple_tiles):
+    ''' This helper function can make previous single value into new tiles
+        this function will generate tiles in repeated id, only for test, it might generate 
+        unpredictable error in real game
+        from [0, 5, 5, 10, 20]
+        to   [(5, 16), (5, 17), (5, 19), (15, 55), (25, 91)]
+    '''
+    new_tiles = []
+    for tile in simple_tiles:
+        if tile == 0:
+            new_tiles.append((5, 19))
+        elif tile == 10:
+            new_tiles.append((15, 55))
+        elif tile == 20:
+            new_tiles.append((25, 91))
+        else:
+            for ele in all_tiles:
+                if ele[0] == tile:
+                    new_tiles.append(ele)
+                    break
+    new_tiles.sort()
+    return new_tiles
+                
