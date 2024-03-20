@@ -38,7 +38,7 @@ class game:
         random.shuffle(self.this_game)
 
 
-    def end(self):
+    def end(self, type):
         self.check_point()
         return False
     
@@ -64,27 +64,46 @@ class game:
     
 
     def game(self, cur_player, remain_tiles):
-        '''
+        ''' game is a recursive method, it only finished when one
+            player wins or run out of tiles
         '''
 
-        # tranfer cur_player from a number to the object 
-        # load the info from current player
+        #   if there are no tiles in remain_tiles, weather there's no tile in
+        #   this_game, or there's no tile in 岭上 tiles, which means there are
+        #   four gang in a single game, both will lead to 流局    
+        if len(remain_tiles) <= 0:
+            self.end('liuju')
+
+        # read player's tiles
         player_tiles = cur_player.my_tiles
         player_chi_peng_gang_tiles = cur_player.chi_peng_gang_tiles
 
+        # mopai check if zimo
         cur_player.mopai(remain_tiles)
         if win(player_tiles, player_chi_peng_gang_tiles):
             self.end()
+
+        # check hidden_gang
         if cur_player.check_hidden_gang():
             cur_player.hidden_gang()
             remain_tiles = self.ling_shang_tiles.pop(0)
-            
             self.game(cur_player, remain_tiles)
 
+        # check add_gang
+        if cur_player.check_add_gang():
+            cur_player.add_gang()
+            remain_tiles = self.ling_shang_tiles.pop(0)
+            self.game(cur_player, remain_tiles)
 
+        # check riichi
+        if cur_player.check_riichi():
+            cur_player.riichi()
+        else: 
+            cur_player.discard()
 
-
-        return False
+        for player in self.players:
+            return False
+        
     
 
     def ju(self):
