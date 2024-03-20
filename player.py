@@ -1,6 +1,6 @@
 import random
 from element import all_tiles, mahjong_tile_elements, find_num_using_tile
-from rules import x_continously, clear_win, deal_red
+from rules import x_continously, clear_win, deal_red, win
 
 # player class，包含属性：点数、手牌、自风、弃牌堆、是否为AI、吃碰杠堆
 # 函数：摸牌✅、弃牌✅、吃、碰、加杠、杠、暗杠、立直
@@ -217,6 +217,23 @@ class player:
                 test_tiles.append(ele)
                 if clear_win(test_tiles):
                     return True
+        return False
+    
+
+    def check_ting_pai(self, cur_tile):
+        return True if win(self.my_tiles + [cur_tile], self.chi_peng_gang_tiles) else False
+
+
+    def final_check_ting_pai(self):
+        ''' ting pai means if get a specific tile, this player can win this game
+            >>> player1 = player(25000, [], 1)
+            >>> player1.my_tiles, player1.chi_peng_gang_tiles = [1, 1, 1, 2, 2, 2], []
+            >>>
+        '''
+        check_tiles = [tile for tile in all_tiles if tile not in self.my_waste]
+        for tile in check_tiles:
+            if win(self.my_tiles + [tile], self.chi_peng_gang_tiles):
+                return True
         return False
 
 
