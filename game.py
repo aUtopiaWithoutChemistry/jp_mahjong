@@ -63,22 +63,23 @@ class game:
         return item + 1 if item != 3 else 0
     
 
-    def game(self, cur_player, tiles):
+    def game(self, cur_player, remain_tiles):
         '''
         '''
 
         # tranfer cur_player from a number to the object 
         # load the info from current player
-        cur_player = self.players[cur_player]
-        cur_tiles = cur_player.my_tiles
-        cur_chi_peng_gang_tiles = cur_player.chi_peng_gang_tiles
+        player_tiles = cur_player.my_tiles
+        player_chi_peng_gang_tiles = cur_player.chi_peng_gang_tiles
 
-        cur_player.mopai(tiles)
-        if win(cur_tiles, cur_chi_peng_gang_tiles):
+        cur_player.mopai(remain_tiles)
+        if win(player_tiles, player_chi_peng_gang_tiles):
             self.end()
         if cur_player.check_hidden_gang():
             cur_player.hidden_gang()
-            tiles = self.ling_shang_tiles.pop(0)
+            remain_tiles = self.ling_shang_tiles.pop(0)
+            
+            self.game(cur_player, remain_tiles)
 
 
 
