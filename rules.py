@@ -10,8 +10,16 @@ def clear_win(tiles):
 
 
 # TODO
+def check_point():
+    return False
+
+
+# TODO
 def chi_peng_gang_win(tiles, chi_peng_gang_tiles):
     return False
+
+
+# TODO 各种役
 
 
 def special_win(tiles):
@@ -206,28 +214,9 @@ def overlapping(tiles):
     return True if shun_zi(tiles) else False
 
 
-def composition(tiles):
-    ''' return a number represent how the tiles composed, for a regular win, it should
-        contains 1 double and 4 mianzi(kezi or shunzi), and the return value of this 
-        combination is 14. However, if get a non-14 number, it can also reflect the 
-        current composition of tiles. first digit shows how many double, second digit
-        shows how many mianzi
-
-        >>> tiles = [1, 1, 1, 2, 3, 4, 5, 5, 6, 7, 8, 9, 9, 9]
-        >>> composition(tiles)
-        14
-        >>> tiles = [1, 1, 1, 1, 2, 3, 4, 5, 6, 7, 8, 9, 30, 30]
-        >>> composition(tiles)
-        14
-        >>> tiles = [41, 41, 41, 42, 42, 42, 43, 43, 43, 0, 5, 10, 15, 15]
-        >>> composition(tiles)
-        14
-        >>> tiles = [1, 1, 1, 2, 2, 2, 3, 3, 42, 42, 5, 5, 6, 6]
-        >>> composition(tiles)
-        42
-        >>> tiles = [1, 1, 2, 2, 3, 3, 4, 5, 0, 6, 6, 7, 41, 41]
-        >>> composition(tiles)
-        14
+def composition_mianzi(tiles):
+    ''' check how many mianzi are there in tiles, this often apply on tiles that
+        removed double, which can avoid some errors
     '''
     if tiles == []:
         return 0
@@ -235,18 +224,48 @@ def composition(tiles):
         cnt, tiles = 1, tiles[3:]
     elif len(tiles) > 5 and overlapping(tiles[:6]):
         cnt, tiles = 2, tiles[6:]
-    elif len(tiles) > 1 and double(tiles[:2]):
-        cnt, tiles = 10, tiles[2:]
     else:
-        return composition(tiles[1:])
-    return cnt + composition(tiles)
+        return composition_mianzi(tiles[1:])
+    return cnt + composition_mianzi(tiles)
+
+
+def composition(tiles):
+    ''' return T or F if this tiles can form 1 double and 4 mianzi, for a regular win. 
+
+        >>> tiles = [1, 1, 1, 2, 3, 4, 5, 5, 6, 7, 8, 9, 9, 9]
+        >>> composition(tiles)
+        True
+        >>> tiles = [1, 1, 1, 1, 2, 3, 4, 5, 6, 7, 8, 9, 30, 30]
+        >>> composition(tiles)
+        True
+        >>> tiles = [41, 41, 41, 42, 42, 42, 43, 43, 43, 0, 5, 10, 15, 15]
+        >>> composition(tiles)
+        True
+        >>> tiles = [1, 1, 1, 2, 2, 2, 3, 3, 42, 42, 5, 5, 6, 6]
+        >>> composition(tiles)
+        False
+        >>> tiles = [1, 1, 2, 2, 3, 3, 4, 5, 0, 6, 6, 7, 41, 41]
+        >>> composition(tiles)
+        True
+        >>> tiles = [1, 1, 1, 2, 2, 2, 3, 4, 6, 6, 6, 7, 7, 7]
+        >>> composition(tiles)
+        True
+    '''
+    for i in range(len(tiles) - 1):
+        if double([tiles[i], tiles[i + 1]]):
+            test_tiles = [tile for tile in tiles]
+            test_tiles.remove(tiles[i])
+            test_tiles.remove(tiles[i + 1])
+            if composition_mianzi(test_tiles) == 4:
+                return True
+    return False
 
 
 def regular_win(tiles):
-    ''' if the composition of tiles conform to 14, then the player wins
+    ''' if the composition return True, then the player wins
 
         >>> tiles = [41, 41, 41, 42, 42, 42, 43, 43, 43, 0, 5, 10, 15, 15]
         >>> regular_win(tiles)
         True
     '''
-    return True if composition(tiles) == 14 else False
+    return True if composition(tiles) else False
