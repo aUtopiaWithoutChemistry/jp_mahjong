@@ -1,11 +1,11 @@
-import random
-from element import all_tiles, mahjong_tile_elements, find_num_using_tile
-from rules import win
+import random, math
+from element import all_tiles
+from rules import win, check_point
 from player import player
 
 # table class，包含四个玩家和剩余牌
 class game:
-    current_tile = ((-1, -1), -1) # the first tuple shows the tile, second shows where it from
+    cur_tile = ((-1, -1), -1) # the first tuple shows the tile, second shows where it from
     cur_player = -1 # how many players in there
     total_chang = 0
     cur_chang = -1
@@ -38,29 +38,77 @@ class game:
         random.shuffle(self.this_game)
 
 
-    def end(self, type):
-        self.check_point()
-        return False
+    def end(self, end_type, cur_players):
+        ''' check which type of end is this game, players is a list, shows which player 
+            and how many players can win, then call the check point function then transfer
+            points to end current game 
+        '''
+        if end_type == 'liuju':
+            ''' when liuju, game() will pass all four players in a list to end method
+                we should check which one is in the status of ting_pai, so that they can get
+                points from other who didn't in that status
+            '''
+            ting_pai = []
+            for player in cur_players:
+                if player.final_check_ting_pai():
+                    ting_pai += [player]
+            send = [player for player in self.players if player not in ting_pai]
+            if len(ting_pai) == 0 or len(ting_pai) == 4:
+                return False
+            elif len(ting_pai) == 1:
+                for i in range(3):
+                    self.transfer_point(1000, send[i], ting_pai[0])
+            elif len(ting_pai) == 2:
+                for i in range(2):
+                    self.transfer_point(1000, send[i], ting_pai[i])
+            elif len(ting_pai) == 3:
+                for i in range(3):
+                    self.transfer_point(1000, send[0], ting_pai[i])
+                
+        elif end_type == 'zimo':
+            ''' when zimo, game() will pass a list have single item which is the player
+                who finished his tile. Other should give to that player 1/3 of this player's
+                final score, if the outcome of multiple by 1/3 is not divisible by 100, then
+                make it up to the nearest 100 number
+            '''
+            send = [player for player in self.players if player not in cur_players]
+            total_point = check_point(cur_players[0])
+            points_from_other = math.ceil(total_point // 100 / 3) * 100
+            for i in range(3):
+                self.transfer_point(points_from_other, send[i], cur_players[0])
+            
+        elif end_type == 'ronghu':
+            ''' when ronghu, game will pass a list that contains the loser and all other winner,
+                loser should pay full score that winner made
+            '''
+            loser, winners = cur_players[0], cur_players[1:]
+            points = []
+            for winner in winners:
+                points += [check_point(winner)]
+            for i in range(len(winner)):
+                self.transfer_point(points[i], loser, winner[i])
     
 
-    def check_point():
-        return False
+    def transfer_point(send_points, from_who, to_whom):
+        from_who.score -= send_points
+        to_whom.score += send_points
     
 
-    def next_item(self, item):
+    def next_player(self, player):
         ''' both player and ju should in [0, 3]
             if reach 3, then next should be 0
 
             >>> game1 = game(1, 4)
-            >>> game1.cur_player = 2
+            >>> game1.cur_player.index() = 2
             >>> game1.cur_player = game1.next_item(game1.cur_player)
-            >>> game1.cur_player
+            >>> game1.cur_player.index()
             3
             >>> game1.cur_player = game1.next_item(game1.cur_player)
-            >>> game1.cur_player
+            >>> game1.cur_player.index()
             0
         '''
-        return item + 1 if item != 3 else 0
+        index = self.players.index(player)
+        return self.players[index + 1] if index < 3 else self.players[0]
     
 
     def game(self, cur_player, remain_tiles):
@@ -72,7 +120,8 @@ class game:
         #   this_game, or there's no tile in 岭上 tiles, which means there are
         #   four gang in a single game, both will lead to 流局    
         if len(remain_tiles) <= 0:
-            self.end('liuju')
+            self.end('liuju', self.players)
+            return True
 
         # read player's tiles
         player_tiles = cur_player.my_tiles
@@ -83,7 +132,8 @@ class game:
 
         # check if zimo
         if win(player_tiles, player_chi_peng_gang_tiles):
-            self.end()
+            self.end('zimo', [cur_player])
+            return True
 
         # check hidden_gang
         if cur_player.check_hidden_gang():
@@ -103,10 +153,14 @@ class game:
         else: 
             cur_player.discard()
 
-        for player in self.players:
+        # check if current discarded tile in th list of other player ting_pai tiles
+        self.cur_tile = (cur_player.my_waste[len(cur_player.my_waste) - 1], self.players.index(cur_player))
+        ting_pai_player = [player for player in self.players if player.check_ting_pai()]
+        if ting_pai_player != []:
+            self.end('ronghu', [cur_player] + ting_pai_player)
+            return True
 
-            if win(player.my_tiles, player.chi_peng_gang_tiles):
-                self.end()
+        for player in self.players:
 
             if player.check_gang():
                 remain_tiles = self.ling_shang_tiles
@@ -120,7 +174,7 @@ class game:
                 player.chi()
                 self.game(player, remain_tiles)
         
-        cur_player = self.next_item(cur_player)
+        cur_player = self.next_player(cur_player)
         self.game(cur_player, remain_tiles)
         
 
