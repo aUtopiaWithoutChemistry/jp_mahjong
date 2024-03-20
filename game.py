@@ -78,21 +78,23 @@ class game:
         player_tiles = cur_player.my_tiles
         player_chi_peng_gang_tiles = cur_player.chi_peng_gang_tiles
 
-        # mopai check if zimo
+        # mopai this will change remain_tiles
         cur_player.mopai(remain_tiles)
+
+        # check if zimo
         if win(player_tiles, player_chi_peng_gang_tiles):
             self.end()
 
         # check hidden_gang
         if cur_player.check_hidden_gang():
             cur_player.hidden_gang()
-            remain_tiles = self.ling_shang_tiles.pop(0)
+            remain_tiles = self.ling_shang_tiles
             self.game(cur_player, remain_tiles)
 
         # check add_gang
         if cur_player.check_add_gang():
             cur_player.add_gang()
-            remain_tiles = self.ling_shang_tiles.pop(0)
+            remain_tiles = self.ling_shang_tiles
             self.game(cur_player, remain_tiles)
 
         # check riichi
@@ -102,9 +104,25 @@ class game:
             cur_player.discard()
 
         for player in self.players:
-            return False
+
+            if win(player.my_tiles, player.chi_peng_gang_tiles):
+                self.end()
+
+            if player.check_gang():
+                remain_tiles = self.ling_shang_tiles
+                self.game(player, remain_tiles)
+            
+            if player.check_peng():
+                player.peng()
+                self.game(player, remain_tiles)
+            
+            if player.check_chi():
+                player.chi()
+                self.game(player, remain_tiles)
         
-    
+        cur_player = self.next_item(cur_player)
+        self.game(cur_player, remain_tiles)
+        
 
     def ju(self):
         while(len(self.this_game != 0)):
