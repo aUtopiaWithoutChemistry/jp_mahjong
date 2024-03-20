@@ -5,25 +5,45 @@ def win(tiles, chi_peng_gang_tiles):
     return True if clear_win(tiles) or chi_peng_gang_win(tiles, chi_peng_gang_tiles) else False
 
 
+# TODO
+def chi_peng_gang_win(tiles, chi_peng_gang_tiles):
+    ''' have chi_peng_gang
+        >>> tiles = [41, 41, 41, 42, 42]
+        >>> chi_peng_gang_tiles = [[0, [1, 2, 3]], [0, [4, 5, 6]], [0, [7, 8, 9]]]
+        >>> chi_peng_gang_win(tiles, chi_peng_gang_tiles)
+        True
+    '''
+    n = len(chi_peng_gang_tiles)
+    return True if composition(tiles, n) else False
+
+
 def clear_win(tiles):
+    ''' 门前清 '''
     return True if special_win(tiles) or regular_win(tiles) else False
 
 
-# TODO
-def check_point():
-    return False
+def special_win(tiles):
+    return True if seven_double(tiles) or guo_shi(tiles) else False
+
+
+def regular_win(tiles):
+    ''' if the composition return True, then the player wins
+
+        >>> tiles = [41, 41, 41, 42, 42, 42, 43, 43, 43, 0, 5, 10, 15, 15]
+        >>> regular_win(tiles)
+        True
+    '''
+    return True if composition(tiles, 0) else False
 
 
 # TODO
-def chi_peng_gang_win(tiles, chi_peng_gang_tiles):
+def check_point(player):
     return False
 
 
 # TODO 各种役
 
 
-def special_win(tiles):
-    return True if seven_double(tiles) or guo_shi(tiles) else False
 
 
 def seven_double(tiles):
@@ -229,26 +249,27 @@ def composition_mianzi(tiles):
     return cnt + composition_mianzi(tiles)
 
 
-def composition(tiles):
-    ''' return T or F if this tiles can form 1 double and 4 mianzi, for a regular win. 
+def composition(tiles, n):
+    ''' take two para, the first is tiles, the second is how many chi_peng_gang have ever made
+        return T or F if this tiles can form 1 double and 4 mianzi, for a regular win. 
 
         >>> tiles = [1, 1, 1, 2, 3, 4, 5, 5, 6, 7, 8, 9, 9, 9]
-        >>> composition(tiles)
+        >>> composition(tiles, 0)
         True
         >>> tiles = [1, 1, 1, 1, 2, 3, 4, 5, 6, 7, 8, 9, 30, 30]
-        >>> composition(tiles)
+        >>> composition(tiles, 0)
         True
         >>> tiles = [41, 41, 41, 42, 42, 42, 43, 43, 43, 0, 5, 10, 15, 15]
-        >>> composition(tiles)
+        >>> composition(tiles, 0)
         True
         >>> tiles = [1, 1, 1, 2, 2, 2, 3, 3, 42, 42, 5, 5, 6, 6]
-        >>> composition(tiles)
+        >>> composition(tiles, 0)
         False
         >>> tiles = [1, 1, 2, 2, 3, 3, 4, 5, 0, 6, 6, 7, 41, 41]
-        >>> composition(tiles)
+        >>> composition(tiles, 0)
         True
         >>> tiles = [1, 1, 1, 2, 2, 2, 3, 4, 6, 6, 6, 7, 7, 7]
-        >>> composition(tiles)
+        >>> composition(tiles, 0)
         True
     '''
     for i in range(len(tiles) - 1):
@@ -256,16 +277,8 @@ def composition(tiles):
             test_tiles = [tile for tile in tiles]
             test_tiles.remove(tiles[i])
             test_tiles.remove(tiles[i + 1])
-            if composition_mianzi(test_tiles) == 4:
+            if composition_mianzi(test_tiles) == 4 - n:
                 return True
     return False
 
 
-def regular_win(tiles):
-    ''' if the composition return True, then the player wins
-
-        >>> tiles = [41, 41, 41, 42, 42, 42, 43, 43, 43, 0, 5, 10, 15, 15]
-        >>> regular_win(tiles)
-        True
-    '''
-    return True if composition(tiles) else False
