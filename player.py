@@ -6,7 +6,7 @@ from rules import x_continously, clear_win, deal_red, win
 # 函数：摸牌✅、弃牌✅、吃、碰、加杠、杠、暗杠、立直
 #              check:吃、碰、加杠、杠、暗杠、立直
 class player:
-    is_AI = False
+    is_ai = False
     score = 0 # should start with 25000
     my_tiles = [] # store all tiles of a player
     my_position = -1
@@ -19,11 +19,11 @@ class player:
     chi_peng_gang_tiles = []
 
 
-    def __init__(self, score, tiles, position, is_AI):
+    def __init__(self, score, tiles, position, is_ai):
         self.score = score
         self.my_tiles = tiles
         self.my_position = position
-        self.is_AI = is_AI
+        self.is_ai = is_ai
 
 
     # all the movement can be done by players integraded both
@@ -43,32 +43,54 @@ class player:
         self.my_tiles.sort()
 
     
-    def discard():
-        return False
+    # all movement
+    def discard(self):
+        if self.is_ai:
+            self.ai_discard()
+        else:
+            self.human_discard()
 
 
-    def chi():
-        return False
+    def chi(self):
+        if self.is_ai:
+            self.ai_chi()
+        else:
+            self.human_chi()
     
 
-    def peng():
-        return False
+    def peng(self):
+        if self.is_ai:
+            self.ai_peng()
+        else:
+            self.human_peng()
     
 
-    def gang():
-        return False
+    def gang(self):
+        if self.is_ai:
+            self.ai_gang()
+        else:
+            self.human_gang()
     
 
-    def add_gang():
-        return False
+    def add_gang(self):
+        if self.is_ai:
+            self.ai_add_gang()
+        else:
+            self.human_add_gang()
 
 
-    def hidden_gang():
-        return False
+    def hidden_gang(self):
+        if self.is_ai:
+            self.ai_hidden_gang()
+        else:
+            self.human_hidden_gang()
 
 
-    def riichi():
-        return False
+    def riichi(self):
+        if self.is_ai:
+            self.ai_riichi()
+        else:
+            self.human_riichi()
     
 
     # human movements
@@ -109,7 +131,53 @@ class player:
                 self.chi_peng_gang_tiles += [0, combo[int(which)]]
 
 
+    def human_peng():
+        return False
+    
+
+    def human_gang():
+        return False
+    
+
+    def human_add_gang():
+        return False
+
+
+    def human_hidden_gang():
+        return False
+
+
+    def human_riichi():
+        return False
+    
+
     # AI movements
+    def ai_discard(self):
+        return False
+
+
+    def ai_chi(self):
+        return False
+    
+
+    def ai_peng(self):
+        return False
+    
+
+    def ai_gang(self):
+        return False
+    
+
+    def ai_add_gang(self):
+        return False
+
+
+    def ai_hidden_gang(self):
+        return False
+
+
+    def ai_riichi(self):
+        return False
 
 
     # check if a movement is valid 
