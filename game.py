@@ -12,6 +12,7 @@ class game:
     cur_ju = -1
     this_game = []
     players = []
+    ace = []                # 14 in total, lingshang and dora tiles are in this
     ling_shang_tiles = []   # max 4, only can be access when someone gang
     surface_dora_tiles = [] # max 1, visable from starting
     hidden_dora_tiles = []  # max 4, every riichi from player will show one more
@@ -21,13 +22,11 @@ class game:
     def __init__(self, total_chang, total_player):
         # decide how many chang in total should be played
         self.total_chang = total_chang
+        self.cur_chang = 0
 
         # add all mahjong tiles in this game
         for ele in all_tiles:
             self.this_game.append(ele)
-
-        # shuffle all the tiles
-        self.this_game.shuffle()
 
         # create n players
         for n in range(total_player):
@@ -178,6 +177,50 @@ class game:
         self.game(cur_player, remain_tiles)
         
 
-    def ju(self):
-        while(len(self.this_game != 0)):
-            return False
+    def start_ju(self):
+        ''' setup all the stuff for a new ju in this game
+        '''
+        if self.cur_ju != 3:
+            self.cur_ju += 1
+        else: 
+            self.cur_ju = 0
+            self.cur_chang += 1
+            if self.cur_chang > self.total_chang:
+                print("Game end!")
+                return False
+
+        # add all mahjong tiles in this game
+        all_tiles = []
+        for ele in all_tiles:
+            self.this_game.append(ele)
+
+        # shuffle all the tiles
+        self.this_game.shuffle()
+
+        # prepare for ace tiles
+        self.ace = []
+        self.ling_shang_tiles = [] 
+        self.surface_dora_tiles = []
+        self.hidden_dora_tiles = [] 
+        self.gang_dora_tiles = []
+
+        for i in range(14):
+            self.ace.append(self.this_game.pop(i))
+        self.surface_dora_tiles.append(self.ace.pop(0))
+
+        for i in range(4):
+            self.ling_shang_tiles.append(self.ace.pop(i))
+
+        for i in range(4):
+            # clear all players' tiles ready for the new game
+            self.players[i].my_tiles = []
+            self.players[i].my_waste = []
+            self.players[i].chi_peng_gang_tiles = []
+
+            # change the position for every player
+            if self.players[i].position != 3:
+                self.players[i].position += 1
+            else:
+                self.players[i].position = 0
+        
+        self.game(self.players[0], self.this_game)
