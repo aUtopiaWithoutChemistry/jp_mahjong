@@ -5,7 +5,6 @@ def win(tiles, chi_peng_gang_tiles):
     return True if clear_win(tiles) or chi_peng_gang_win(tiles, chi_peng_gang_tiles) else False
 
 
-# TODO
 def chi_peng_gang_win(tiles, chi_peng_gang_tiles):
     ''' have chi_peng_gang
         >>> tiles = [41, 41, 41, 42, 42]
@@ -38,8 +37,22 @@ def regular_win(tiles):
 
 # TODO
 def check_point(player):
+    fan = check_fan(player)
+    fu = check_fu(player)
+    basic_point = bp(fan, fu)
     return False
 
+
+def check_fan(player):
+    return False
+
+
+def check_fu(player):
+    return False
+
+
+def bp(fan, fu):
+    return False
 
 # TODO 各种役
 
