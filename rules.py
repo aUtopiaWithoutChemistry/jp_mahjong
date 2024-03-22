@@ -1,5 +1,8 @@
 from element import tiles_to_value
 
+
+
+
 # rules for winning
 def win(tiles, chi_peng_gang_tiles):
     return True if clear_win(tiles) or chi_peng_gang_win(tiles, chi_peng_gang_tiles) else False
@@ -22,7 +25,7 @@ def clear_win(tiles):
 
 
 def special_win(tiles):
-    return True if seven_double(tiles) or guo_shi(tiles) else False
+    return True if seven_double(tiles) == 7 or guo_shi(tiles) else False
 
 
 def regular_win(tiles):
@@ -39,33 +42,133 @@ def regular_win(tiles):
 def check_point(player):
     fan = check_fan(player)
     fu = check_fu(player)
-    basic_point = bp(fan, fu)
+    basic_point = bp(fan, fu, player)
     return False
 
 
 def check_fan(player):
-    return False
+    if seven_double(player.my_tiles) == 7:
+        fan = 2
+    return fan
 
 
 def check_fu(player):
-    return False
+    if seven_double(player.my_tiles) == 7:
+        fu = 25
+    return fu
 
 
 def bp(fan, fu):
-    return False
+    basic_point = fu * 2 ** (fan + 2)
+    if basic_point > 2000:
+        if fan <= 5:
+            basic_point = 2000
+        elif fan >= 6 and fan <= 7:
+            basic_point = 3000
+        elif fan >= 8 and fan <= 10:
+            basic_point = 4000
+        elif fan >= 11 and fan <= 12:
+            basic_point = 6000
+        elif fan >= 13:
+            basic_point = 8000
+    return basic_point
+
 
 # TODO 各种役
+# 一番役
+def duan_yao_jiu(tiles):
+    ''' 断幺九 without yao jiu tiles when win
+        yao jiu tiles: 1, 9, 11, 19, 21, 29, 31, 32, 33, 34, 41, 42, 43
+    '''
+    yao_jiu = [tile for tile in tiles if tile in [1, 9, 11, 19, 21, 29, 31, 32, 33, 34, 41, 42, 43]]
+    return 1 if len(yao_jiu) == 0 else 0
 
 
+def yi_tiles(game, player, tiles):
+    ''' 役牌，如场风、自风、三元牌 
+    '''
+    valid_yi = [game.cur_chang + 31, player.cur_position + 31, 41, 42, 43]
+    return 1 if tiles in valid_yi else 0
+    
+    
+def he_di_mo_yu(game):
+    ''' 河底摸鱼 use the last tile to win the game
+    '''
+    return 1 if game.this_game == [] else 0
 
 
+def ling_shang_kai_hua(player):
+    ''' 岭上开花 use the ling shang tile to win the game
+    '''
+    return 1 if (player.all_behavior[- 1][1] == 'mopai' and 
+                 player.all_behavior[- 2][1] in ['hidden_gang', 'add_gang', 'gang']) else 0
+
+
+def qiang_gang(players, time_stamp):
+    ''' 抢杠 use other player's add_gang tile to win
+    '''
+    for player in players:
+        if player.all_behavior[-1][0] == time_stamp and player.all_behavior[-1][1] == 'add_gang':
+            return 1 
+    return 0
+    
+    
+def hai_di_lao_yue(game, player):
+    ''' 海底捞月 zimo the last tile
+    '''
+    return 1 if game.this_game == [] and player.all_behavior[-1][1] == 'mopai' else 0
+    
+    
+def riichi(player):
+    ''' リーチ 立直 
+    '''
+    for behavior in player.all_behavior:
+        if behavior[1] == 'riichi':
+            return 1 
+    return 0
+
+
+def yi_fa(winner, players):
+    ''' 一发 yifa means after riichi, win the game inside one circle, and during this time 
+        should no one chi, peng, or gang, if this player can win by other's add_gang, then 
+        add_gang invalid, this player still can yifa
+    '''
+    all_behavior_after_riichi = []
+    for behavior in winner.all_behavior:
+        if behavior[1] == 'riichi':
+            riichi_turn = behavior[0]
+    for player in players:
+        for behavior in player.all_bahavior:
+            if behavior[0] > riichi_turn:
+                all_behavior_after_riichi += behavior
+    
+    
+def clear_zimo(game):
+    ''' 门前清自摸和 clear win + zimo
+    '''
+    cur_ju = game.cur_chang * 4 + game.cur_ju
+    player = game.all_behavior[cur_ju][-1][1]
+    behavior = game.all_behavior[cur_ju][-1][2]
+    return 1 if regular_win(player.my_tiles) and behavior == 'zimo' else 0
+
+
+def ping_hu(game):
+    ''' 平和 don't have extra fu except from zimo, which means only have shunzi and 
+        double can't be zifeng, changfeng, and sanyuan tiles, and should ting pai for two tiles
+    '''
+    cur_ju = game.cur_chang * 4 + game.cur_ju
+    player = game.all_behavior[cur_ju][-1][1]
+    all_tiles = player.my_tiles + [tile[1] for tile in player.chi_peng_gang_tiles]
+    return 1
+    
+    
 def seven_double(tiles):
     if len(tiles) == 0:
-        return True
+        return 1
     elif tiles[1][0] != tiles[0][0]:
-        return False
+        return 0
     else:
-        return seven_double(tiles[2:])  
+        return 1 + seven_double(tiles[2:])
 
 
 def guo_shi(tiles):
