@@ -10,8 +10,26 @@ class game:
     total_chang = 0
     cur_chang = -1
     cur_ju = -1
+    time_stamp = -1
     this_game = []
     players = []
+    
+    ''' store all players behaviors in a total game 
+        in the form of [ [(cur_chang, cur_ju), (0, 0's tiles), (1, 1's tiles), (2, 2's tiles), (3, 3's tiles),
+                          (time stamp, player_number, behavior, on which tile)], [], []]
+        the cur_chang and cur_ju will be the index 0 for every element in this list, the second to the fifth will
+        be the initial tiles for player 0 to 3, from index six there will be every single move on the game,
+        they should be in the form of (time_stamp, player, behavior, tile)
+        
+        time_stamp is an attribute of game, it will renew in each new game, and increament when every movement have been 
+        down.
+        
+        behavior can be 'chi', 'peng', 'gang', 'add_gang', 'hidden_gang', 'discard', 'riichi', 'zimo', 'rong_hu', 'liu_ju_ting_pai'
+        
+        tile should be in the form of (value, id)
+    '''
+    all_behaviors = []       
+    
     ace = []                # 14 in total, lingshang and dora tiles are in this
     ling_shang_tiles = []   # max 4, only can be access when someone gang
     surface_dora_tiles = [] # max 1, visable from starting
@@ -19,10 +37,13 @@ class game:
     gang_dora_tiles = []    # max 4, every gang from player will show one more
 
 
-    def __init__(self, total_chang, total_player):
+    def __init__(self, total_chang=2, total_player=4):
         # decide how many chang in total should be played
         self.total_chang = total_chang
+        self.total_player = total_player
         self.cur_chang = 0
+        self.cur_ju = 0
+        self.time_stamp = 0
 
         # add all mahjong tiles in this game
         for ele in all_tiles:
@@ -31,7 +52,12 @@ class game:
         # create n players
         for n in range(total_player):
             self.players.append(player(25000, [], n, False))
-
+    
+    
+    def time_update(self):
+        self.time_stamp += 1
+        return self.time_stamp
+    
 
     def shuffle(self):
         random.shuffle(self.this_game)
@@ -74,7 +100,8 @@ class game:
             total_point = check_point(cur_players[0])
             points_from_other = math.ceil(total_point // 100 / 3) * 100
             for i in range(3):
-                self.transfer_point(points_from_other, send[i], cur_players[0])
+                if send[i].my_position == self.cur_chang:
+                    self.transfer_point(points_from_other, send[i], cur_players[0])
             
         elif end_type == 'ronghu':
             ''' when ronghu, game will pass a list that contains the loser and all other winner,
@@ -110,11 +137,11 @@ class game:
         return self.players[index + 1] if index < 3 else self.players[0]
     
 
-    def game(self, cur_player, remain_tiles):
+    def game(self, cur_player, remain_tiles, storage_place):
         ''' game is a recursive method, it only finished when one
             player wins or run out of tiles
         '''
-
+        
         #   if there are no tiles in remain_tiles, weather there's no tile in
         #   this_game, or there's no tile in 岭上 tiles, which means there are
         #   four gang in a single game, both will lead to 流局    
@@ -128,6 +155,7 @@ class game:
 
         # mopai this will change remain_tiles
         cur_player.mopai(remain_tiles)
+        self.time_stamp += 1
 
         # check if zimo
         if win(player_tiles, player_chi_peng_gang_tiles):
@@ -137,20 +165,30 @@ class game:
         # check hidden_gang
         if cur_player.check_hidden_gang():
             cur_player.hidden_gang()
+            self.time_stamp += 1
             remain_tiles = self.ling_shang_tiles
-            self.game(cur_player, remain_tiles)
+            self.game(cur_player, remain_tiles, storage_place)
 
         # check add_gang
         if cur_player.check_add_gang():
             cur_player.add_gang()
+            self.time_stamp += 1
+            
+            ting_pai_player = [player for player in self.players if player.check_ting_pai()]
+            if ting_pai_player != []:
+                self.end('ronghu', [cur_player] + ting_pai_player)
+                return True
+
             remain_tiles = self.ling_shang_tiles
-            self.game(cur_player, remain_tiles)
+            self.game(cur_player, remain_tiles, storage_place)
 
         # check riichi
         if cur_player.check_riichi():
             cur_player.riichi()
+            self.time_stamp += 1
         else: 
             cur_player.discard()
+            self.time_stamp += 1
 
         # check if current discarded tile in th list of other player ting_pai tiles
         self.cur_tile = (cur_player.my_waste[len(cur_player.my_waste) - 1], self.players.index(cur_player))
@@ -162,19 +200,23 @@ class game:
         for player in self.players:
 
             if player.check_gang():
+                player.gang()
+                self.time_stamp += 1
                 remain_tiles = self.ling_shang_tiles
-                self.game(player, remain_tiles)
+                self.game(player, remain_tiles, storage_place)
             
             if player.check_peng():
                 player.peng()
-                self.game(player, remain_tiles)
+                self.time_stamp += 1
+                self.game(player, remain_tiles, storage_place)
             
             if player.check_chi():
                 player.chi()
-                self.game(player, remain_tiles)
+                self.time_stamp += 1
+                self.game(player, remain_tiles, storage_place)
         
         cur_player = self.next_player(cur_player)
-        self.game(cur_player, remain_tiles)
+        self.game(cur_player, remain_tiles, storage_place)
         
 
     def start_ju(self):
@@ -189,6 +231,9 @@ class game:
                 print("Game end!")
                 return False
 
+        # the index in all_behaviors for this game
+        storage_place = self.cur_chang * 4 + self.cur_ju
+        
         # add all mahjong tiles in this game
         all_tiles = []
         for ele in all_tiles:
@@ -223,4 +268,15 @@ class game:
             else:
                 self.players[i].position = 0
         
-        self.game(self.players[0], self.this_game)
+        self.time_stamp = 0
+        self.game(self.players[0], self.this_game, storage_place)
+
+
+    # TODO
+    def store_game():
+        return False
+    
+    
+    # TODO 
+    def reply():
+        return False
