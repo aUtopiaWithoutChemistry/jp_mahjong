@@ -6,20 +6,28 @@ from rules import x_continously, clear_win, deal_red, win
 # 函数：摸牌✅、弃牌✅、吃、碰、加杠、杠、暗杠、立直
 #              check:吃、碰、加杠、杠、暗杠、立直
 class player:
+    number = 0
     is_ai = False
     score = 0 # should start with 25000
     my_tiles = [] # store all tiles of a player
     my_position = -1
     my_waste = []
+    
     ''' tiles in chi_peng_gang_tiles will store in group, like
             [[0, [1, 2, 3]], [1, [5, 5, 0]], [2, [41, 41, 41, 41]], [3, [42, 42, 42, 42]]]
         each group contains two elements, the first represent it's type, 0 is chi, 1 is peng, 
         2 is gang, 3 is add_gang. the second element is a list shows all the tiles in this group.
     '''
     chi_peng_gang_tiles = []
+    
+    ''' This will store all the behavior of this player and the initial tiles for this player
+        for reply and some judgement [init_tiles, (time_stamp, behavior, cur_tile)]
+    '''
+    all_behavior = []
+    
 
-
-    def __init__(self, score, tiles, position, is_ai):
+    def __init__(self, number, score, tiles, position, is_ai):
+        self.number = number
         self.score = score
         self.my_tiles = tiles
         self.my_position = position
@@ -28,7 +36,7 @@ class player:
 
     # all the movement can be done by players integraded both
     # human and AI
-    def mopai(self, this_game):
+    def mopai(self, this_game, time_stamp):
         ''' remove the first item in this_game and add into my_tiles
 
         >>> player1 = player(0, [], 0)
@@ -39,9 +47,11 @@ class player:
         >>> this_game
         [8, 9, 6, 4]
         '''
-        self.my_tiles.append(this_game.pop(0))
+        cur_tile = this_game.pop(0)
+        self.my_tiles.append(cur_tile)
         self.my_tiles.sort()
-
+        self.write_behavior(time_stamp, 'mopai', cur_tile)
+    
     
     # all movement
     def discard(self):
@@ -49,28 +59,28 @@ class player:
             self.ai_discard()
         else:
             self.human_discard()
-
+            
 
     def chi(self):
         if self.is_ai:
             self.ai_chi()
         else:
             self.human_chi()
-    
+            
 
     def peng(self):
         if self.is_ai:
             self.ai_peng()
         else:
             self.human_peng()
-    
+            
 
     def gang(self):
         if self.is_ai:
             self.ai_gang()
         else:
             self.human_gang()
-    
+            
 
     def add_gang(self):
         if self.is_ai:
@@ -84,15 +94,15 @@ class player:
             self.ai_hidden_gang()
         else:
             self.human_hidden_gang()
-
+            
 
     def riichi(self):
         if self.is_ai:
             self.ai_riichi()
         else:
             self.human_riichi()
-    
-
+  
+        
     # human movements
     def human_discard(self):
         ''' remove the selected item from player's tiles and move it 
@@ -105,7 +115,7 @@ class player:
         discard_tile = input("Please select which tiles to discard: ")
         tile_num = find_num_using_tile[discard_tile]
         self.my_waste.append(self.my_tiles.pop(self.my_tiles.index(tile_num)))
-
+        return True
 
     def human_chi(self, current_tile):
         ''' if player on your left side discard a tile that can used by you to build a shun_zi
@@ -129,6 +139,9 @@ class player:
                     combo += [[test_tile, test_tile + 1, test_tile + 2]]
                 which = input("Which combo you want to Chi? " + ' '.join(str(item) for item in combo) + ' ')
                 self.chi_peng_gang_tiles += [0, combo[int(which)]]
+                return True
+            else:
+                return False
 
 
     def human_peng():
