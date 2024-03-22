@@ -1,10 +1,9 @@
 import random
 from element import all_tiles, mahjong_tile_elements, find_num_using_tile
-from rules import x_continously, clear_win, deal_red, win
 
 # player class，包含属性：点数、手牌、自风、弃牌堆、是否为AI、吃碰杠堆
 # 函数：摸牌✅、弃牌✅、吃、碰、加杠、杠、暗杠、立直
-#              check:吃、碰、加杠、杠、暗杠、立直
+# all check:吃、碰、加杠、杠、暗杠、立直 will be move into rules
 class player:
     number = 0
     is_ai = False
@@ -14,9 +13,9 @@ class player:
     my_waste = []
     
     ''' tiles in chi_peng_gang_tiles will store in group, like
-            [[0, [1, 2, 3]], [1, [5, 5, 0]], [2, [41, 41, 41, 41]], [3, [42, 42, 42, 42]]]
-        each group contains two elements, the first represent it's type, 0 is chi, 1 is peng, 
-        2 is gang, 3 is add_gang. the second element is a list shows all the tiles in this group.
+            [(10, [1, 2, 3]), (11, [5, 5, 0]), (12, [41, 41, 41, 41]), (13, [42, 42, 42, 42])]
+        each group contains two elements, the first represent it's type, 10 is chi, 11 is peng, 
+        12 is gang, 13 is hidden_gang. the second element is a list shows all the tiles in this group.
     '''
     chi_peng_gang_tiles = []
     
@@ -26,7 +25,7 @@ class player:
     all_behavior = []
     
 
-    def __init__(self, number, score, tiles, position, is_ai):
+    def __init__(self, number=0, score=25000, tiles=[], position=0, is_ai=False):
         self.number = number
         self.score = score
         self.my_tiles = tiles
@@ -194,164 +193,164 @@ class player:
 
 
     # check if a movement is valid 
-    def check_hidden_gang(self):
-        ''' check if have hidden gang using my tiles
+    # def check_hidden_gang(self):
+    #     ''' check if have hidden gang using my tiles
 
-            >>> player1 = player(25000, [], 0)
-            >>> player1.my_tiles = [1, 1, 1, 1, 2, 3, 4, 5, 6, 7, 8, 9, 30, 30]
-            >>> player1.check_hidden_gang()
-            True
-            >>> player1.my_tiles = [1, 1, 1, 2, 3, 4, 5, 5, 6, 7, 8, 9, 9, 9]
-            >>> player1.check_hidden_gang()
-            False
-        '''
-        for tile in self.my_tiles:
-            four_con = x_continously(self.my_tiles, 4)
-            if four_con(tile):
-                return True
-        return False
+    #         >>> player1 = player(25000, [], 0)
+    #         >>> player1.my_tiles = [1, 1, 1, 1, 2, 3, 4, 5, 6, 7, 8, 9, 30, 30]
+    #         >>> player1.check_hidden_gang()
+    #         True
+    #         >>> player1.my_tiles = [1, 1, 1, 2, 3, 4, 5, 5, 6, 7, 8, 9, 9, 9]
+    #         >>> player1.check_hidden_gang()
+    #         False
+    #     '''
+    #     for tile in self.my_tiles:
+    #         four_con = x_continously(self.my_tiles, 4)
+    #         if four_con(tile):
+    #             return True
+    #     return False
 
 
-    def check_gang(self, current_tile):
-        ''' check if could gang using other's waste tile
+    # def check_gang(self, current_tile):
+    #     ''' check if could gang using other's waste tile
 
-            >>> player1 = player(25000, [], 0)
-            >>> player1.my_tiles = [1, 1, 1, 2, 3, 4, 5, 5, 6, 7, 8, 9, 9]
-            >>> current_tile = (1, 3)
-            >>> player1.check_gang(current_tile)
-            True
-            >>> player1.my_tiles = [1, 1, 2, 2, 3, 4, 5, 5, 6, 7, 8, 9, 9]
-            >>> player1.check_gang(current_tile)
-            False
-        '''
-        test_tiles = [tile for tile in self.my_tiles]
-        test_tiles.append(current_tile[0])
-        test_tiles = deal_red(test_tiles)
-        test_tiles.sort()
-        four_con = x_continously(test_tiles, 4)
-        return True if four_con(current_tile[0]) else False
+    #         >>> player1 = player(25000, [], 0)
+    #         >>> player1.my_tiles = [1, 1, 1, 2, 3, 4, 5, 5, 6, 7, 8, 9, 9]
+    #         >>> current_tile = (1, 3)
+    #         >>> player1.check_gang(current_tile)
+    #         True
+    #         >>> player1.my_tiles = [1, 1, 2, 2, 3, 4, 5, 5, 6, 7, 8, 9, 9]
+    #         >>> player1.check_gang(current_tile)
+    #         False
+    #     '''
+    #     test_tiles = [tile for tile in self.my_tiles]
+    #     test_tiles.append(current_tile[0])
+    #     test_tiles = deal_red(test_tiles)
+    #     test_tiles.sort()
+    #     four_con = x_continously(test_tiles, 4)
+    #     return True if four_con(current_tile[0]) else False
     
 
-    def check_add_gang(self):
-        ''' add_gang means player have one ke_zi in chi_pong_gang_tiles, and get the same tile
-            as the tiles in ke_zi, then the player can add_gang, put this new tile into his 
-            chi_pong_gang_tiles and get a new tile
+    # def check_add_gang(self):
+    #     ''' add_gang means player have one ke_zi in chi_pong_gang_tiles, and get the same tile
+    #         as the tiles in ke_zi, then the player can add_gang, put this new tile into his 
+    #         chi_pong_gang_tiles and get a new tile
 
-            >>> player1 = player(25000, [], 0)
-            >>> player1.chi_peng_gang_tiles = [[1, [5, 0, 5]]]
-            >>> player1.my_tiles = [1, 1, 2, 2, 3, 5, 9]
-            >>> player1.check_add_gang()
-            True
-            >>> player1.chi_peng_gang_tiles = [[1, [4, 4, 4]]]
-            >>> player1.check_add_gang()
-            False
-        '''
-        tiles = deal_red(self.my_tiles)
-        for group in self.chi_peng_gang_tiles:
-            check_group = deal_red(group[1])
-            if group[0] == 1 and (check_group[0] in tiles):
-                return True
-        return False
-
-
-    def check_peng(self, current_tile):
-        ''' check if could peng using other's waste tile
-
-            >>> player1 = player(25000, [], 0)
-            >>> player1.my_tiles = [1, 1, 2, 2, 3, 4, 5, 5, 6, 7, 8, 9, 9]
-            >>> current_tile = (0, 3)
-            >>> player1.check_peng(current_tile)
-            True
-            >>> player1.my_tiles = [1, 2, 2, 2, 3, 4, 4, 5, 6, 7, 8, 9, 9]
-            >>> player1.check_peng(current_tile)
-            False
-        '''
-        test_tiles = [tile for tile in self.my_tiles]
-        test_tiles.append(current_tile[0])
-        test_tiles = deal_red(test_tiles)
-        test_tiles.sort()
-        three_con = x_continously(test_tiles, 3)
-        if current_tile[0] % 10 == 0:
-            return True if three_con(current_tile[0] + 5) else False
-        else:
-            return True if three_con(current_tile[0]) else False
+    #         >>> player1 = player(25000, [], 0)
+    #         >>> player1.chi_peng_gang_tiles = [[1, [5, 0, 5]]]
+    #         >>> player1.my_tiles = [1, 1, 2, 2, 3, 5, 9]
+    #         >>> player1.check_add_gang()
+    #         True
+    #         >>> player1.chi_peng_gang_tiles = [[1, [4, 4, 4]]]
+    #         >>> player1.check_add_gang()
+    #         False
+    #     '''
+    #     tiles = deal_red(self.my_tiles)
+    #     for group in self.chi_peng_gang_tiles:
+    #         check_group = deal_red(group[1])
+    #         if group[0] == 1 and (check_group[0] in tiles):
+    #             return True
+    #     return False
 
 
-    def check_riichi(self, this_game):
-        ''' riichi means player needs only one tile to win the game, after the player 
-            riichi, then this player must automatically drop the new tile if he can't win
-            with this tile
+    # def check_peng(self, current_tile):
+    #     ''' check if could peng using other's waste tile
 
-            >>> player1 = player(25000, [], 0)
-            >>> player1.my_tiles = [1, 1, 1, 2, 3, 4, 0, 6, 7, 8, 9, 9, 9, 41]
-            >>> for ele in player1.my_tiles:
-            ...     all_tiles.remove(ele)
-            >>> this_game = all_tiles
-            >>> player1.check_riichi(this_game)
-            True
-        '''
-        test_tiles = [tile for tile in self.my_tiles]
-        test_tiles = deal_red(test_tiles)
-        for tile in range(len(test_tiles)):
-            for ele in this_game:
-                test_tiles.pop(tile)
-                test_tiles.append(ele)
-                if clear_win(test_tiles):
-                    return True
-        return False
+    #         >>> player1 = player(25000, [], 0)
+    #         >>> player1.my_tiles = [1, 1, 2, 2, 3, 4, 5, 5, 6, 7, 8, 9, 9]
+    #         >>> current_tile = (0, 3)
+    #         >>> player1.check_peng(current_tile)
+    #         True
+    #         >>> player1.my_tiles = [1, 2, 2, 2, 3, 4, 4, 5, 6, 7, 8, 9, 9]
+    #         >>> player1.check_peng(current_tile)
+    #         False
+    #     '''
+    #     test_tiles = [tile for tile in self.my_tiles]
+    #     test_tiles.append(current_tile[0])
+    #     test_tiles = deal_red(test_tiles)
+    #     test_tiles.sort()
+    #     three_con = x_continously(test_tiles, 3)
+    #     if current_tile[0] % 10 == 0:
+    #         return True if three_con(current_tile[0] + 5) else False
+    #     else:
+    #         return True if three_con(current_tile[0]) else False
+
+
+    # def check_riichi(self, this_game):
+    #     ''' riichi means player needs only one tile to win the game, after the player 
+    #         riichi, then this player must automatically drop the new tile if he can't win
+    #         with this tile
+
+    #         >>> player1 = player(25000, [], 0)
+    #         >>> player1.my_tiles = [1, 1, 1, 2, 3, 4, 0, 6, 7, 8, 9, 9, 9, 41]
+    #         >>> for ele in player1.my_tiles:
+    #         ...     all_tiles.remove(ele)
+    #         >>> this_game = all_tiles
+    #         >>> player1.check_riichi(this_game)
+    #         True
+    #     '''
+    #     test_tiles = [tile for tile in self.my_tiles]
+    #     test_tiles = deal_red(test_tiles)
+    #     for tile in range(len(test_tiles)):
+    #         for ele in this_game:
+    #             test_tiles.pop(tile)
+    #             test_tiles.append(ele)
+    #             if clear_win(test_tiles):
+    #                 return True
+    #     return False
     
 
-    def check_ting_pai(self, cur_tile):
-        return True if win(self.my_tiles + [cur_tile], self.chi_peng_gang_tiles) else False
+    # def check_ting_pai(self, cur_tile):
+    #     return True if win(self.my_tiles + [cur_tile], self.chi_peng_gang_tiles) else False
 
 
-    def final_check_ting_pai(self):
-        ''' ting pai means if get a specific tile, this player can win this game
-            >>> player1 = player(25000, [], 1)
-            >>> player1.my_tiles, player1.chi_peng_gang_tiles = [1, 1, 1, 2, 2, 2], []
-            >>>
-        '''
-        check_tiles = [tile for tile in all_tiles if tile not in self.my_waste]
-        for tile in check_tiles:
-            if win(self.my_tiles + [tile], self.chi_peng_gang_tiles):
-                return True
-        return False
+    # def final_check_ting_pai(self):
+    #     ''' ting pai means if get a specific tile, this player can win this game
+    #         >>> player1 = player(25000, [], 1)
+    #         >>> player1.my_tiles, player1.chi_peng_gang_tiles = [1, 1, 1, 2, 2, 2], []
+    #         >>>
+    #     '''
+    #     check_tiles = [tile for tile in all_tiles if tile not in self.my_waste]
+    #     for tile in check_tiles:
+    #         if win(self.my_tiles + [tile], self.chi_peng_gang_tiles):
+    #             return True
+    #     return False
 
 
-    def check_chi(self, current_tile):
-        ''' check_chi returns a value to represent if current player can chi the tile 
-            from last player's waste tile which is current_tile. if can chi, then value 
-            is how many ways to chi, if cannot, then return 0
+    # def check_chi(self, current_tile):
+    #     ''' check_chi returns a value to represent if current player can chi the tile 
+    #         from last player's waste tile which is current_tile. if can chi, then value 
+    #         is how many ways to chi, if cannot, then return 0
 
-            >>> player1 = player(25000, [], 1)
-            >>> current_tile = (4, 0)
-            >>> player1.my_tiles = [2, 3, 0, 6, 7]
-            >>> player1.check_chi(current_tile)
-            3
-            >>> player1.my_tiles = [1, 2, 3, 3, 5, 5]
-            >>> player1.check_chi(current_tile)
-            2
-            >>> player1.my_tiles = [3, 3, 6]
-            >>> player1.check_chi(current_tile)
-            0
-        '''
-        if current_tile[1] == (self.my_position - 1) or current_tile[1] == (self.my_position + 3):
-            tile_type = current_tile[0] // 10
-            valid_chi_list = [tile for tile in self.my_tiles if tile // 10 == tile_type]
-            valid_chi_list = deal_red(valid_chi_list)
-            valid_chi_list.sort()
-            if current_tile[0] > 30:
-                return 0
-            else:
-                cnt = 0
-                conds = [
-                    ((current_tile[0] - 2) in valid_chi_list) and ((current_tile[0] - 1) in valid_chi_list),
-                    ((current_tile[0] - 1) in valid_chi_list) and ((current_tile[0] + 1) in valid_chi_list),
-                    ((current_tile[0] + 1) in valid_chi_list) and ((current_tile[0] + 2) in valid_chi_list)
-                ]
-                for cond in conds:
-                    if cond:
-                        cnt += 1
-                return cnt
-        else:
-            return 0
+    #         >>> player1 = player(25000, [], 1)
+    #         >>> current_tile = (4, 0)
+    #         >>> player1.my_tiles = [2, 3, 0, 6, 7]
+    #         >>> player1.check_chi(current_tile)
+    #         3
+    #         >>> player1.my_tiles = [1, 2, 3, 3, 5, 5]
+    #         >>> player1.check_chi(current_tile)
+    #         2
+    #         >>> player1.my_tiles = [3, 3, 6]
+    #         >>> player1.check_chi(current_tile)
+    #         0
+    #     '''
+    #     if current_tile[1] == (self.my_position - 1) or current_tile[1] == (self.my_position + 3):
+    #         tile_type = current_tile[0] // 10
+    #         valid_chi_list = [tile for tile in self.my_tiles if tile // 10 == tile_type]
+    #         valid_chi_list = deal_red(valid_chi_list)
+    #         valid_chi_list.sort()
+    #         if current_tile[0] > 30:
+    #             return 0
+    #         else:
+    #             cnt = 0
+    #             conds = [
+    #                 ((current_tile[0] - 2) in valid_chi_list) and ((current_tile[0] - 1) in valid_chi_list),
+    #                 ((current_tile[0] - 1) in valid_chi_list) and ((current_tile[0] + 1) in valid_chi_list),
+    #                 ((current_tile[0] + 1) in valid_chi_list) and ((current_tile[0] + 2) in valid_chi_list)
+    #             ]
+    #             for cond in conds:
+    #                 if cond:
+    #                     cnt += 1
+    #             return cnt
+    #     else:
+    #         return 0
