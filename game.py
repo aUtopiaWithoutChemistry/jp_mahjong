@@ -5,6 +5,10 @@ from player import player
 
 # table class，包含四个玩家和剩余牌
 class game:
+    
+    ''' cur_tile is the tile that every player discard, if no one chi, peng, gang, hu, then this tile
+        goes into current player's waste tiles, clear cur_tile, waiting for next player discard
+    '''
     cur_tile = ((-1, -1), -1) # the first tuple shows the tile, second shows where it from
     cur_player = -1 # how many players in there
     total_chang = 0
