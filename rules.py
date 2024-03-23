@@ -1,14 +1,17 @@
 from element import tiles_to_value
+from player import player
 
-
+''' TODO change the original function fit the new tile, the input tile should be in the form of
+    (value, id) all functions can only take player and game as parameters
+'''
 
 
 # rules for winning
-def win(tiles, chi_peng_gang_tiles):
-    return True if clear_win(tiles) or chi_peng_gang_win(tiles, chi_peng_gang_tiles) else False
+def win(player):
+    return True if clear_win(player) or chi_peng_gang_win(player) else False
 
 
-def chi_peng_gang_win(tiles, chi_peng_gang_tiles):
+def chi_peng_gang_win(player):
     ''' have chi_peng_gang
         >>> tiles = [41, 41, 41, 42, 42]
         >>> chi_peng_gang_tiles = [[0, [1, 2, 3]], [0, [4, 5, 6]], [0, [7, 8, 9]]]
@@ -76,16 +79,39 @@ def bp(fan, fu):
 
 # TODO 各种役
 # 一番役
-def duan_yao_jiu(tiles):
+def duan_yao_jiu(player):
     ''' 断幺九 without yao jiu tiles when win
         yao jiu tiles: 1, 9, 11, 19, 21, 29, 31, 32, 33, 34, 41, 42, 43
+        
+        >>> player1 = player()
+        >>> player1.my_tiles = [(2,4), (3,9), (4,15), (5,16), (5,18), (5, 19), (6,20), (6,21), (6,22), (7,24), (7,25), (7,26), (8,28), (8,30)]
+        >>> duan_yao_jiu(player1)
+        1
+        >>> player1.my_tiles = [(2,4), (3,9), (4,15), (5,16), (5,18), (5, 19), (6,20), (6,21), (6,22), (7,24), (7,25), (7,26), (9,32), (9,33)]
+        >>> duan_yao_jiu(player1)
+        0
+        >>> player1.my_tiles = [(18,66), (18,67)]
+        >>> player1.chi_peng_gang_tiles = [(11, [(2,4), (2,5), (2,6)]),(11, [(3,9), (3,10), (3,11)]),(11, [(4,12), (4,13), (4,14)]),(11, [(5,16), (5,17), (5,19)])]
+        >>> duan_yao_jiu(player1)
+        1
     '''
-    yao_jiu = [tile for tile in tiles if tile in [1, 9, 11, 19, 21, 29, 31, 32, 33, 34, 41, 42, 43]]
+    tiles = player.my_tiles
+    chi_peng_gang_tiles = [group[1] for group in player.chi_peng_gang_tiles]
+    for group in chi_peng_gang_tiles:
+        tiles += group
+    yao_jiu = [tile[0] for tile in tiles if tile[0] in [1, 9, 11, 19, 21, 29, 31, 32, 33, 34, 41, 42, 43]]
     return 1 if len(yao_jiu) == 0 else 0
 
 
 def yi_tiles(game, player, tiles):
-    ''' 役牌，如场风、自风、三元牌 
+    ''' 役牌刻子或杠子，如场风、自风、三元牌 contains (dong, xi, nan, bei) one kezi of corresponding my position 
+        or chang_feng, bai, fa, zhong, which is 41, 42, 43 and 31 + cur_chang or 31 + cur_position
+        
+        >>> tiles1 = [(32,112), (32,112), (32,112)]
+        >>> player1 = player(0, 25000, [], 1, False)
+        >>> game1 = game()
+        >>> game1.cur_chang = 0
+        
     '''
     valid_yi = [game.cur_chang + 31, player.cur_position + 31, 41, 42, 43]
     return 1 if tiles in valid_yi else 0
@@ -93,12 +119,14 @@ def yi_tiles(game, player, tiles):
     
 def he_di_mo_yu(game):
     ''' 河底摸鱼 use the last tile to win the game
+        tiles = [(), (), (), (), (), (), (), (), (), (), (), (), (), ()]
     '''
     return 1 if game.this_game == [] else 0
 
 
 def ling_shang_kai_hua(player):
     ''' 岭上开花 use the ling shang tile to win the game
+        tiles = [(), (), (), (), (), (), (), (), (), (), (), (), (), ()]
     '''
     return 1 if (player.all_behavior[- 1][1] == 'mopai' and 
                  player.all_behavior[- 2][1] in ['hidden_gang', 'add_gang', 'gang']) else 0
@@ -106,6 +134,7 @@ def ling_shang_kai_hua(player):
 
 def qiang_gang(players, time_stamp):
     ''' 抢杠 use other player's add_gang tile to win
+        tiles = [(), (), (), (), (), (), (), (), (), (), (), (), (), ()]
     '''
     for player in players:
         if player.all_behavior[-1][0] == time_stamp and player.all_behavior[-1][1] == 'add_gang':
@@ -115,12 +144,14 @@ def qiang_gang(players, time_stamp):
     
 def hai_di_lao_yue(game, player):
     ''' 海底捞月 zimo the last tile
+        tiles = [(), (), (), (), (), (), (), (), (), (), (), (), (), ()]
     '''
     return 1 if game.this_game == [] and player.all_behavior[-1][1] == 'mopai' else 0
     
     
 def riichi(player):
     ''' リーチ 立直 
+        tiles = [(), (), (), (), (), (), (), (), (), (), (), (), (), ()]
     '''
     for behavior in player.all_behavior:
         if behavior[1] == 'riichi':
@@ -132,6 +163,7 @@ def yi_fa(winner, players):
     ''' 一发 yifa means after riichi, win the game inside one circle, and during this time 
         should no one chi, peng, or gang, if this player can win by other's add_gang, then 
         add_gang invalid, this player still can yifa
+        tiles = [(), (), (), (), (), (), (), (), (), (), (), (), (), ()]
     '''
     all_behavior_after_riichi = []
     for behavior in winner.all_behavior:
@@ -145,6 +177,7 @@ def yi_fa(winner, players):
     
 def clear_zimo(game):
     ''' 门前清自摸和 clear win + zimo
+        tiles = [(), (), (), (), (), (), (), (), (), (), (), (), (), ()]
     '''
     cur_ju = game.cur_chang * 4 + game.cur_ju
     player = game.all_behavior[cur_ju][-1][1]
@@ -155,6 +188,7 @@ def clear_zimo(game):
 def ping_hu(game):
     ''' 平和 don't have extra fu except from zimo, which means only have shunzi and 
         double can't be zifeng, changfeng, and sanyuan tiles, and should ting pai for two tiles
+        tiles = [(), (), (), (), (), (), (), (), (), (), (), (), (), ()]
     '''
     cur_ju = game.cur_chang * 4 + game.cur_ju
     player = game.all_behavior[cur_ju][-1][1]
@@ -251,22 +285,6 @@ def x_continously(my_tiles, x):
     return func
 
 
-def deal_red(tiles):
-    ''' there are three red baopai in mahjong, they are special during counting score,
-        but they are just considered as 5 man or ping or suo, we need to convert them
-        from 0, 10, 20 to 5, 15, 25 during the judgement of win
-
-        >>> tiles = [0, 5, 5]
-        >>> new_tiles = deal_red(tiles)
-        >>> new_tiles
-        [5, 5, 5]
-    '''
-    for i in range(len(tiles)):
-        if tiles[i] % 10 == 0:
-            tiles[i] += 5
-    return tiles
-
-
 def shun_zi(tiles):
     ''' shun_zi is three adjacent tiles have the relationship of [n, n + 1, n + 2]
 
@@ -280,12 +298,11 @@ def shun_zi(tiles):
         >>> shun_zi(tiles)
         False
     '''
-    tiles = deal_red(tiles)
     tiles.sort()
     for tile in tiles:
-        if tile > 30:
+        if tile[0] > 30:
             return False
-    return True if tiles[0] + 1 == tiles[1] and tiles[1] + 1 == tiles[2] else False
+    return True if tiles[0][0] + 1 == tiles[1][0] and tiles[1][0] + 1 == tiles[2][0] else False
 
 
 def ke_zi(tiles):
@@ -301,8 +318,8 @@ def ke_zi(tiles):
         >>> ke_zi(tiles)
         False
     '''
-    tiles = deal_red(tiles)
-    return True if tiles[0] == tiles[1] and tiles[1] == tiles[2] else False
+    
+    return True if tiles[0][0] == tiles[1][0] and tiles[1][0] == tiles[2][0] else False
 
 
 def double(tiles):
@@ -318,8 +335,14 @@ def double(tiles):
         >>> double(tiles)
         False
     '''
-    tiles = deal_red(tiles)
+    
     return True if tiles[0] == tiles[1] else False
+
+
+def yi_bei_kou(tiles):
+    ''' test for yi_bei_kou  Thanks for copilot to help me write this light version
+    '''
+    return all(tiles[i][0] == tiles[i + 1][0] for i in range(0, 5, 2)) and tiles[4][0] == tiles[2][0] + 1 == tiles[0][0] + 2
 
 
 def overlapping(tiles):
@@ -337,10 +360,10 @@ def overlapping(tiles):
         >>> overlapping (tiles)
         False
     '''
-    tiles = deal_red(tiles)
+    
     tiles.sort()
     for tile in tiles:
-        if tile > 30:
+        if tile[0] > 30:
             return False
     tiles_set = list(set(tiles))
 
@@ -353,48 +376,72 @@ def overlapping(tiles):
 def composition_mianzi(tiles):
     ''' check how many mianzi are there in tiles, this often apply on tiles that
         removed double, which can avoid some errors
+        
+        the return value should be a clasified list, which contains two to four group
+        of tiles, and should marked it's type
+        
+        for example, the input is [(1,0), (1, 2, 2, 3, 3, 5, 5, 0, 10, 15, 15]
+        the output should be [(2, [1, 1, 2, 2, 3, 3]), (1, [5, 5, 0]), (0, [10, 14, 16])]
+                             [(type, [tile_list]), (), ()]   
+                             for type, 0 means shunzi, 1 means kezi, 2 means yibeiko
     '''
     if tiles == []:
-        return 0
-    elif len(tiles) > 2 and (shun_zi(tiles[:3]) or ke_zi(tiles[:3])):
-        cnt, tiles = 1, tiles[3:]
+        return []
+    elif len(tiles) > 2 and shun_zi(tiles[:3]):
+        return_value, remain = [(0, tiles[:3])], tiles[3:]
+    elif len(tiles) > 2 and ke_zi(tiles[:3]):
+        return_value, remain = [(1, tiles[:3])], tiles[3:]
+    elif len(tiles) > 5 and yi_bei_kou(tiles[:6]):
+        return_value, remain = [(2, tiles[:6])], tiles[6:]
     elif len(tiles) > 5 and overlapping(tiles[:6]):
-        cnt, tiles = 2, tiles[6:]
+        original_list = tiles[:6]
+        new_set = set(original_list)
+        new_list = list(new_set)[:3]
+        return_value = [(1, new_list)]
+        
+        tmp = [item for item in new_list]
+        for item in original_list:
+            if item in new_list:
+                original_list.pop(original_list.index(item))
+                tmp.pop(tmp.index(item))
+                
+        return_value += [(1, original_list)]
+        remain = tiles[6:]
     else:
         return composition_mianzi(tiles[1:])
-    return cnt + composition_mianzi(tiles)
+    return return_value + composition_mianzi(remain)
 
 
-def composition(tiles, n):
-    ''' take two para, the first is tiles, the second is how many chi_peng_gang have ever made
-        return T or F if this tiles can form 1 double and 4 mianzi, for a regular win. 
+def composition(player):
+    ''' take player as input, orgnaize my_tiles into group
 
-        >>> tiles = [1, 1, 1, 2, 3, 4, 5, 5, 6, 7, 8, 9, 9, 9]
-        >>> composition(tiles, 0)
-        True
-        >>> tiles = [1, 1, 1, 1, 2, 3, 4, 5, 6, 7, 8, 9, 30, 30]
-        >>> composition(tiles, 0)
-        True
-        >>> tiles = [41, 41, 41, 42, 42, 42, 43, 43, 43, 0, 5, 10, 15, 15]
-        >>> composition(tiles, 0)
-        True
-        >>> tiles = [1, 1, 1, 2, 2, 2, 3, 3, 42, 42, 5, 5, 6, 6]
-        >>> composition(tiles, 0)
+        >>> player1 = player()
+        >>> player1.my_tiles = [(1,0), (1,1), (1,2), (2,4), (3,8), (4,12), (5,16), (5,18), (6,23), (7,24), (8,31), (9,32), (9,33), (9,34)]
+        >>> composition(player1)
+        [(-1, [(5,16), (5,18)])), (0, [(2,4), (3,8), (4,12)]), (0, [(6,23), (7,24), (8,31)]), (1, [(1,0), (1,1), (1,2)], (1, [(9,32), (9,33), (9,34)])]
+        >>> player1.my_tiles = [1, 1, 1, 2, 2, 2, 3, 3, 42, 42, 5, 5, 6, 6]
+        >>> composition(player1)
         False
-        >>> tiles = [1, 1, 2, 2, 3, 3, 4, 5, 0, 6, 6, 7, 41, 41]
-        >>> composition(tiles, 0)
-        True
-        >>> tiles = [1, 1, 1, 2, 2, 2, 3, 4, 6, 6, 6, 7, 7, 7]
-        >>> composition(tiles, 0)
-        True
+        >>> player1.my_tiles = [(1,0), (1,1)]
+        >>> player1.chi_peng_gang_tiles = [(10, []), (10, []), (10, []), (10, [])]
     '''
-    for i in range(len(tiles) - 1):
-        if double([tiles[i], tiles[i + 1]]):
-            test_tiles = [tile for tile in tiles]
-            test_tiles.remove(tiles[i])
-            test_tiles.remove(tiles[i + 1])
-            if composition_mianzi(test_tiles) == 4 - n:
-                return True
+    my_tiles = player.my_tiles
+    organized_tiles = player.chi_peng_gang_tiles
+    for i in range(len(my_tiles) - 1):
+        if double([my_tiles[i][0], my_tiles[i + 1][0]]):
+            test_tiles = [tile for tile in my_tiles]
+            double_tiles = [(-1, [test_tiles.pop(i + 1), test_tiles.pop(i)])]
+            tiles_comp = double_tiles
+            tiles_comp += composition_mianzi(test_tiles)
+            tiles_comp += organized_tiles
+            tiles_comp.sort()
+            if len(tiles_comp) == 5:
+                return tiles_comp
+            elif len(tiles_comp) == 4:
+                for group in tiles_comp:
+                    if group[0] == 2:
+                        return tiles_comp 
+            elif len(tiles_comp) == 3:
+                if tiles_comp[0][0] == 2 and tiles_comp[1][0] == 2:
+                    return tiles_comp
     return False
-
-
