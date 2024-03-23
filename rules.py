@@ -266,7 +266,6 @@ def x_continously(my_tiles, x):
         >>> four_con = x_continously(my_tiles, 4)
         >>> four_con(1)
         True
-
     '''
     test_tiles = [x for x in my_tiles]
     def func(tile):
@@ -287,21 +286,21 @@ def x_continously(my_tiles, x):
 
 def shun_zi(tiles):
     ''' shun_zi is three adjacent tiles have the relationship of [n, n + 1, n + 2]
+        since all the number tiles are separated(1~9, 11~19, 21~29)
 
-        >>> tiles = [4, 5, 6]
+        >>> tiles = [(4,14), (5,19), (6,23)]
         >>> shun_zi(tiles)
         True
-        >>> tiles = [0, 4, 6]
-        >>> shun_zi(tiles)
-        True
-        >>> tiles = [41, 42, 43]
+        >>> tiles = [(41,124), (42,128), (43,132)]
         >>> shun_zi(tiles)
         False
+        >>> tiles = [(), (), ()]
     '''
     tiles.sort()
     for tile in tiles:
         if tile[0] > 30:
             return False
+
     return True if tiles[0][0] + 1 == tiles[1][0] and tiles[1][0] + 1 == tiles[2][0] else False
 
 
@@ -318,7 +317,6 @@ def ke_zi(tiles):
         >>> ke_zi(tiles)
         False
     '''
-    
     return True if tiles[0][0] == tiles[1][0] and tiles[1][0] == tiles[2][0] else False
 
 
@@ -335,7 +333,6 @@ def double(tiles):
         >>> double(tiles)
         False
     '''
-    
     return True if tiles[0] == tiles[1] else False
 
 
@@ -347,30 +344,26 @@ def yi_bei_kou(tiles):
 
 def overlapping(tiles):
     ''' sometimes there will be overlapping in tiles, which makes shun_zi cannot detect
-        them, but ther are still valid, some overlapping even can get higher score, like
-        yibeikou [1, 1, 2, 2, 3, 3]
+        them, but ther are still valid, like [1, 2, 2, 3, 3, 4]
+        
+        This funciton will take a list as argument, and there are only 6 items inside
 
-        >>> tiles = [1, 1, 2, 2, 3, 3]
+        >>> tiles = [(1,0), (1,1), (2,5), (2,6), (3,9), (3,10)]
         >>> overlapping(tiles)
         True
-        >>> tiles = [3, 4, 4, 5, 0, 6]
+        >>> tiles = [(3,10), (4,13), (4,14), (5,18), (5,19), (6,22)]
         >>> overlapping(tiles)
         True
-        >>> tiles = [41, 41, 42, 42, 43, 43]
+        >>> tiles = [(41,124), (41,125), (42,128), (42,129), (43,132), (43,133)]
         >>> overlapping (tiles)
         False
     '''
-    
     tiles.sort()
     for tile in tiles:
         if tile[0] > 30:
             return False
-    tiles_set = list(set(tiles))
-
-    if len(tiles_set) > 2 and shun_zi(tiles_set):
-        for i in range(3):
-            tiles.remove(tiles_set[i])
-    return True if shun_zi(tiles) else False
+    
+    return True if shun_zi([tiles[0], tiles[1], tiles[3]]) and shun_zi([tiles[2], tiles[4], tiles[5]]) else False
 
 
 def composition_mianzi(tiles):
@@ -380,10 +373,14 @@ def composition_mianzi(tiles):
         the return value should be a clasified list, which contains two to four group
         of tiles, and should marked it's type
         
-        for example, the input is [(1,0), (1, 2, 2, 3, 3, 5, 5, 0, 10, 15, 15]
-        the output should be [(2, [1, 1, 2, 2, 3, 3]), (1, [5, 5, 0]), (0, [10, 14, 16])]
+        for example, the input is [(1,0), (1,1), (2,4), (2,6), (3,8), (3,9), (5,16), (5,18), (5,19), (14,49), (16,58), (15,55)]
+        the output should be [(2, [(1,0), (1,1), (2,4), (2,6), (3,8), (3,9)]), (1, [(5,16), (5,18), (5,19)]), (0, [(14,49), (16,58), (15,55)])]
                              [(type, [tile_list]), (), ()]   
                              for type, 0 means shunzi, 1 means kezi, 2 means yibeiko
+                             
+        >>> tiles = [(1,0), (1,1), (2,4), (2,6), (3,8), (3,9), (5,16), (5,18), (5,19), (14,49), (16,58), (15,55)]
+        >>> composition_mianzi(tiles)
+        [(2, [(1, 0), (1, 1), (2, 4), (2, 6), (3, 8), (3, 9)]), (1, [(5, 16), (5, 18), (5, 19)]), (0, [(14, 49), (16, 58), (15, 55)])]
     '''
     if tiles == []:
         return []
@@ -414,6 +411,8 @@ def composition_mianzi(tiles):
 
 def composition(player):
     ''' take player as input, orgnaize my_tiles into group
+        the return value are in the form of [(-1, []), (0, []), (), (), ()]
+        -1 means double, 0 means shunzi, 1 means kezi
 
         >>> player1 = player()
         >>> player1.my_tiles = [(1,0), (1,1), (1,2), (2,4), (3,8), (4,12), (5,16), (5,18), (6,23), (7,24), (8,31), (9,32), (9,33), (9,34)]
@@ -423,7 +422,9 @@ def composition(player):
         >>> composition(player1)
         False
         >>> player1.my_tiles = [(1,0), (1,1)]
-        >>> player1.chi_peng_gang_tiles = [(10, []), (10, []), (10, []), (10, [])]
+        >>> player1.chi_peng_gang_tiles = [(10, [(2,4), (2,5), (2,6)]), (10, [(3,8), (3,9), (3,10)]), (10, [(4,12), (4,13), (4,14)]), (10, [(5,16), (5,17), (5,19)])]
+        >>> composition(player1)
+        [(-1, [(1, 1), (1, 0)]), (10, [(2, 4), (2, 5), (2, 6)]), (10, [(3, 8), (3, 9), (3, 10)]), (10, [(4, 12), (4, 13), (4, 14)]), (10, [(5, 16), (5, 17), (5, 19)])]
     '''
     my_tiles = player.my_tiles
     organized_tiles = player.chi_peng_gang_tiles
