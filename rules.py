@@ -1,8 +1,8 @@
-from element import tiles_to_value
+from element import tiles_to_value, all_tiles
 from player import player
 
 ''' TODO change the original function fit the new tile, the input tile should be in the form of
-    (value, id) all functions can only take player and game as parameters
+    (value, id) all functions can only take player and parametor from game as parameters
 '''
 
 
@@ -13,32 +13,37 @@ def win(player):
 
 def chi_peng_gang_win(player):
     ''' have chi_peng_gang
-        >>> tiles = [41, 41, 41, 42, 42]
-        >>> chi_peng_gang_tiles = [[0, [1, 2, 3]], [0, [4, 5, 6]], [0, [7, 8, 9]]]
-        >>> chi_peng_gang_win(tiles, chi_peng_gang_tiles)
+    
+        >>> player1 = player()
+        >>> player1.my_tiles = [(41,0), (41,0), (41,0), (42,0), (42,0)]
+        >>> player1.chi_peng_gang_tiles = [[0, [(1,0), (2,0), (3,0)]], [0, [(4,0), (5,0), (6,0)]], [0, [(7,0), (8,0), (9,0)]]]
+        >>> chi_peng_gang_win(player1)
         True
     '''
-    n = len(chi_peng_gang_tiles)
-    return True if composition(tiles, n) else False
+    return True if player.chi_peng_gang_tiles != [] and composition(player) else False
 
 
-def clear_win(tiles):
-    ''' 门前清 '''
-    return True if special_win(tiles) or regular_win(tiles) else False
+def clear_win(player):
+    ''' 门前清 
+    '''
+    return True if special_clear_win(player.my_tiles) or regular_clear_win(player) else False
 
 
-def special_win(tiles):
+def special_clear_win(tiles):
+    ''' check if 七对子 or 国士无双
+    '''
     return True if seven_double(tiles) == 7 or guo_shi(tiles) else False
 
 
-def regular_win(tiles):
+def regular_clear_win(player):
     ''' if the composition return True, then the player wins
 
-        >>> tiles = [41, 41, 41, 42, 42, 42, 43, 43, 43, 0, 5, 10, 15, 15]
-        >>> regular_win(tiles)
+        >>> player1 = player()
+        >>> player1.my_tiles = [(41,0), (41,0), (41,0), (42,0), (42,0), (42,0), (43,0), (43,0), (43,0), (5,0), (5,0), (15,0), (15,0), (15,0)]
+        >>> regular_clear_win(player1)
         True
     '''
-    return True if composition(tiles, 0) else False
+    return True if player.chi_peng_gang_tiles == [] and composition(player) else False
 
 
 # TODO
@@ -78,7 +83,7 @@ def bp(fan, fu):
 
 
 # TODO 各种役
-# 一番役
+# 一番役 ################################################################################################
 def duan_yao_jiu(player):
     ''' 断幺九 without yao jiu tiles when win
         yao jiu tiles: 1, 9, 11, 19, 21, 29, 31, 32, 33, 34, 41, 42, 43
@@ -103,149 +108,155 @@ def duan_yao_jiu(player):
     return 1 if len(yao_jiu) == 0 else 0
 
 
-def yi_tiles(game, player, tiles):
+def yi_tiles(player, cur_chang):
     ''' 役牌刻子或杠子，如场风、自风、三元牌 contains (dong, xi, nan, bei) one kezi of corresponding my position 
         or chang_feng, bai, fa, zhong, which is 41, 42, 43 and 31 + cur_chang or 31 + cur_position
         
-        >>> tiles1 = [(32,112), (32,112), (32,112)]
-        >>> player1 = player(0, 25000, [], 1, False)
-        >>> game1 = game()
-        >>> game1.cur_chang = 0
-        
+        >>> player1 = player()
+        >>> player1.my_tiles = [(1,0),(1,0),(2,0),(2,0),(2,0),(3,0),(3,0),(3,0),(4,0),(4,0),(4,0)]
+        >>> player1.chi_peng_gang_tiles = [(11, [(31,0), (31,0), (31,0)])]
+        >>> cur_chang = 0
+        >>> yi_tiles(player1, cur_chang)
+        True
     '''
-    valid_yi = [game.cur_chang + 31, player.cur_position + 31, 41, 42, 43]
-    return 1 if tiles in valid_yi else 0
+    valid_yi = [cur_chang + 31, player.my_position + 31, 41, 42, 43]
+    all_tiles_groups = composition(player)
+    for group in all_tiles_groups:
+        if group[0] in [1, 11, 12, 13] and group[1][0][0] in valid_yi:
+            return 1
+    return 0
     
     
-def he_di_mo_yu(game):
+def he_di_mo_yu(this_game, all_behavior):
     ''' 河底摸鱼 use the last tile to win the game
-        tiles = [(), (), (), (), (), (), (), (), (), (), (), (), (), ()]
     '''
-    return 1 if game.this_game == [] else 0
+    return 1 if this_game == [] and all_behavior[-1][2] == 'rong_hu' else 0
 
 
-def ling_shang_kai_hua(player):
+def ling_shang_kai_hua(all_behavior):
     ''' 岭上开花 use the ling shang tile to win the game
-        tiles = [(), (), (), (), (), (), (), (), (), (), (), (), (), ()]
     '''
-    return 1 if (player.all_behavior[- 1][1] == 'mopai' and 
-                 player.all_behavior[- 2][1] in ['hidden_gang', 'add_gang', 'gang']) else 0
+    return 1 if (all_behavior[-1][2] == 'zimo' and 
+                 all_behavior[-3][2] in ['hidden_gang', 'add_gang', 'gang']) else 0
 
 
-def qiang_gang(players, time_stamp):
+def qiang_gang(all_behavior):
     ''' 抢杠 use other player's add_gang tile to win
-        tiles = [(), (), (), (), (), (), (), (), (), (), (), (), (), ()]
     '''
-    for player in players:
-        if player.all_behavior[-1][0] == time_stamp and player.all_behavior[-1][1] == 'add_gang':
-            return 1 
-    return 0
+    return 1 if all_behavior[-1][2] == 'rong_hu' and all_behavior[-2][2] == 'add_gang' else 0
     
     
-def hai_di_lao_yue(game, player):
+def hai_di_lao_yue(this_game, all_behavior):
     ''' 海底捞月 zimo the last tile
-        tiles = [(), (), (), (), (), (), (), (), (), (), (), (), (), ()]
     '''
-    return 1 if game.this_game == [] and player.all_behavior[-1][1] == 'mopai' else 0
+    return 1 if this_game == [] and all_behavior[-1][2] == 'zimo' else 0
     
     
-def riichi(player):
+def riichi(player, all_behavior):
     ''' リーチ 立直 
-        tiles = [(), (), (), (), (), (), (), (), (), (), (), (), (), ()]
     '''
-    for behavior in player.all_behavior:
-        if behavior[1] == 'riichi':
+    for behavior in all_behavior:
+        if behavior[2] == 'riichi' and behavior[1] == player.number:
             return 1 
     return 0
 
 
-def yi_fa(winner, players):
+def yi_fa(player, all_behavior):
     ''' 一发 yifa means after riichi, win the game inside one circle, and during this time 
         should no one chi, peng, or gang, if this player can win by other's add_gang, then 
         add_gang invalid, this player still can yifa
-        tiles = [(), (), (), (), (), (), (), (), (), (), (), (), (), ()]
     '''
-    all_behavior_after_riichi = []
-    for behavior in winner.all_behavior:
-        if behavior[1] == 'riichi':
+    for behavior in all_behavior:
+        if behavior[2] == 'riichi' and behavior[1] == player.number:
             riichi_turn = behavior[0]
-    for player in players:
-        for behavior in player.all_bahavior:
-            if behavior[0] > riichi_turn:
-                all_behavior_after_riichi += behavior
+    
+    if all_behavior[-1][0] - riichi_turn <= 8:
+        for behavior in all_behavior[riichi_turn:]:
+            if behavior[2] not in ['chi', 'peng', 'gang', 'hidden_gang']:
+                return 1
+    return 0
+
     
     
-def clear_zimo(game):
+def clear_zimo(player, all_behavior):
     ''' 门前清自摸和 clear win + zimo
-        tiles = [(), (), (), (), (), (), (), (), (), (), (), (), (), ()]
     '''
-    cur_ju = game.cur_chang * 4 + game.cur_ju
-    player = game.all_behavior[cur_ju][-1][1]
-    behavior = game.all_behavior[cur_ju][-1][2]
-    return 1 if regular_win(player.my_tiles) and behavior == 'zimo' else 0
+    return 1 if regular_clear_win(player.my_tiles) and all_behavior[-1][2] == 'zimo' else 0
 
 
-def ping_hu(game):
+def ping_hu(player):
     ''' 平和 don't have extra fu except from zimo, which means only have shunzi and 
         double can't be zifeng, changfeng, and sanyuan tiles, and should ting pai for two tiles
         tiles = [(), (), (), (), (), (), (), (), (), (), (), (), (), ()]
     '''
-    cur_ju = game.cur_chang * 4 + game.cur_ju
-    player = game.all_behavior[cur_ju][-1][1]
-    all_tiles = player.my_tiles + [tile[1] for tile in player.chi_peng_gang_tiles]
+    groups = composition(player)
     return 1
     
     
+# special yi ####################################################################################################
 def seven_double(tiles):
-    if len(tiles) == 0:
-        return 1
-    elif tiles[1][0] != tiles[0][0]:
-        return 0
-    else:
-        return 1 + seven_double(tiles[2:])
+    ''' check if the player's tiles fit the seven double
+    
+        helper funciton, so take tiles as input
+        
+        >>> tiles = [(1,0),(1,1),(3,9),(3,11),(5,16),(5,17),(21,72),(21,73),(32,113),(32,114),(33,116),(33,117),(42,128),(42,129)]
+        >>> seven_double(tiles)
+        True
+    '''
+    return all(tiles[i][0] == tiles[i + 1][0] for i in range(0, 13, 2)) 
 
 
 def guo_shi(tiles):
+    ''' check for if the player's tiles fit the requsite of guo_shi
+    
+        helper function, so take tiles as input
+
+        >>> tiles = [(1,1), (9,32), (11,36), (19,69), (21,75), (29,104), (31,110), (32,113), (33,119), (34,123), (41,124), (42,128), (43,132), (43,135)]
+        >>> guo_shi(tiles)
+        True
+    '''
     tiles = tiles_to_value(tiles)
-    standard_guo_shi = [1, 9, 11, 19, 21, 29, 31, 32, 33, 34, 41, 42, 43]
-    for i in range(len(standard_guo_shi)):
-        if standard_guo_shi[i] not in tiles:
+    standard_guo_shi = [1,9,11,19,21,29,31,32,33,34,41,42,43]
+    for tile in standard_guo_shi:
+        if tile not in tiles:
+            return False
+        
+    for tile in tiles:
+        if tile not in standard_guo_shi:
             return False
     return True
 
 
+#####################################################################################################################################
 def split_tiles(cond):
     ''' to split all tiles in to five type of tiles, ease the following judgement
 
-        >>> tiles = [0, 5, 8, 8, 8, 41, 41, 41, 42, 42, 42, 43, 43, 43]
-        >>> split_man = split_tiles(man)
-        >>> new_tiles = split_man(tiles)
-        >>> new_tiles
-        [0, 5, 8, 8, 8]
-        >>> split_feng = split_tiles(feng)
-        >>> new_tiles = split_feng(tiles)
-        >>> new_tiles
+        >>> tiles = [(5,19), (5,16), (8,28), (8,29), (8,30), (41,124), (41,125), (41,126), (42,128), (42,129), (42,130), (43,132), (43,133), (43,134)]
+        >>> man_tiles = split_tiles(man)(tiles)
+        >>> man_tiles
+        [(5,19), (5,16), (8,28), (8,29), (8,30)]
+        >>> feng_tiles = split_tiles(feng)(tiles)
+        >>> feng_tiles
         []
-        >>> split_man = split_tiles(sanyuan)
-        >>> new_tiles = split_man(tiles)
-        >>> new_tiles
-        [41, 41, 41, 42, 42, 42, 43, 43, 43]
+        >>> sanyuan_tiles = split_tiles(sanyuan)(tiles)
+        >>> sanyuan_tiles
+        [(41,124), (41,125), (41,126), (42,128), (42,129), (42,130), (43,132), (43,133), (43,134)]
     '''
     def func(tiles):
-        sub_list = [tile for tile in tiles if cond(tile)]
+        sub_list = [tile for tile in tiles if cond(tile[0])]
         return sub_list
     return func
 
 
 # condition statement for split_tiles
 def man(tile): 
-    return True if tile > -1 and tile < 10 else False
+    return True if tile > 0 and tile < 10 else False
 
 def ping(tile):
-    return True if tile > 9 and tile < 20 else False
+    return True if tile > 10 and tile < 20 else False
 
 def suo(tile):
-    return True if tile > 19 and tile < 30 else False
+    return True if tile > 20 and tile < 30 else False
 
 def feng(tile):
     return True if tile > 30 and tile < 35 else False
@@ -254,39 +265,41 @@ def sanyuan(tile):
     return True if tile > 40 and tile < 44 else False
 
 
-# return a function that judge if there are x same tiles in a list
-def x_continously(my_tiles, x):
-    ''' return a function to test are there x continously tiles in
-        a players tiles, if there have x tiles ,then the return 
-        function will return True, vice versa
-        >>> my_tiles = [1, 1, 1, 1, 2, 3, 4]
-        >>> three_con = x_continously(my_tiles, 3)
-        >>> three_con(1)
-        False
-        >>> four_con = x_continously(my_tiles, 4)
-        >>> four_con(1)
-        True
-    '''
-    test_tiles = [x for x in my_tiles]
-    def func(tile):
-        cnt = 1
-        cnt_max = 1
-        for n in range(len(test_tiles) - 1):
-            if test_tiles[n] == test_tiles[n + 1] and test_tiles[n] == tile:
-                cnt += 1
-                if cnt > cnt_max:
-                    cnt_max = cnt
-            else:
-                cnt = 1
-        if cnt_max == x:
-            return True
-        return False
-    return func
+# # return a function that judge if there are x same tiles in a list
+# def x_continously(my_tiles, x):
+#     ''' return a function to test are there x continously tiles in
+#         a players tiles, if there have x tiles ,then the return 
+#         function will return True, vice versa
+#         >>> my_tiles = [1, 1, 1, 1, 2, 3, 4]
+#         >>> three_con = x_continously(my_tiles, 3)
+#         >>> three_con(1)
+#         False
+#         >>> four_con = x_continously(my_tiles, 4)
+#         >>> four_con(1)
+#         True
+#     '''
+#     test_tiles = [x for x in my_tiles]
+#     def func(tile):
+#         cnt = 1
+#         cnt_max = 1
+#         for n in range(len(test_tiles) - 1):
+#             if test_tiles[n] == test_tiles[n + 1] and test_tiles[n] == tile:
+#                 cnt += 1
+#                 if cnt > cnt_max:
+#                     cnt_max = cnt
+#             else:
+#                 cnt = 1
+#         if cnt_max == x:
+#             return True
+#         return False
+#     return func
 
 
 def shun_zi(tiles):
     ''' shun_zi is three adjacent tiles have the relationship of [n, n + 1, n + 2]
         since all the number tiles are separated(1~9, 11~19, 21~29)
+        
+        helper function, so take tiles as input
 
         >>> tiles = [(4,14), (5,19), (6,23)]
         >>> shun_zi(tiles)
@@ -294,7 +307,6 @@ def shun_zi(tiles):
         >>> tiles = [(41,124), (42,128), (43,132)]
         >>> shun_zi(tiles)
         False
-        >>> tiles = [(), (), ()]
     '''
     tiles.sort()
     for tile in tiles:
@@ -306,14 +318,13 @@ def shun_zi(tiles):
 
 def ke_zi(tiles):
     ''' ke_zi is three adjacent tiles have the same value
+    
+        helper function, so take tiles as input
 
-        >>> tiles = [10, 15, 15]
+        >>> tiles = [(15,55), (15,53), (15,54)]
         >>> ke_zi(tiles)
         True
-        >>> tiles = [41, 41, 41]
-        >>> ke_zi(tiles)
-        True
-        >>> tiles = [41, 42, 43]
+        >>> tiles = [(41,125), (42,128), (43,134)]
         >>> ke_zi(tiles)
         False
     '''
@@ -323,22 +334,32 @@ def ke_zi(tiles):
 def double(tiles):
     ''' double is nesscery for win in jp mahjong
 
-        >>> tiles = [0, 5]
+        helper function, so take tiles as input
+        
+        >>> tiles = [(5,16), (5,19)]
         >>> double(tiles)
         True
-        >>> tiles = [43, 43]
-        >>> double(tiles)
-        True
-        >>> tiles = [42, 41]
+        >>> tiles = [(42,128), (41,125)]
         >>> double(tiles)
         False
     '''
-    return True if tiles[0] == tiles[1] else False
+    return True if tiles[0][0] == tiles[1][0] else False
 
 
 def yi_bei_kou(tiles):
-    ''' test for yi_bei_kou  Thanks for copilot to help me write this light version
+    ''' test for yi_bei_kou, which means there are two exact same shunzi in my_tiles
+    
+        helper function, so take tiles as input
+
+        >>> tiles = [(1,0), (1,1), (2,4), (2,5), (3,8), (3,9)]
+        >>> yi_bei_kou(tiles)
+        True
     '''
+    tiles.sort()
+    for tile in tiles:
+        if tile[0] > 30:
+            return False
+        
     return all(tiles[i][0] == tiles[i + 1][0] for i in range(0, 5, 2)) and tiles[4][0] == tiles[2][0] + 1 == tiles[0][0] + 2
 
 
@@ -347,6 +368,8 @@ def overlapping(tiles):
         them, but ther are still valid, like [1, 2, 2, 3, 3, 4]
         
         This funciton will take a list as argument, and there are only 6 items inside
+        
+        helper function, so take tiles as input
 
         >>> tiles = [(1,0), (1,1), (2,5), (2,6), (3,9), (3,10)]
         >>> overlapping(tiles)
@@ -369,6 +392,8 @@ def overlapping(tiles):
 def composition_mianzi(tiles):
     ''' check how many mianzi are there in tiles, this often apply on tiles that
         removed double, which can avoid some errors
+        
+        helper function, so take tiles as input
         
         the return value should be a clasified list, which contains two to four group
         of tiles, and should marked it's type
@@ -429,13 +454,13 @@ def composition(player):
     my_tiles = player.my_tiles
     organized_tiles = player.chi_peng_gang_tiles
     for i in range(len(my_tiles) - 1):
-        if double([my_tiles[i][0], my_tiles[i + 1][0]]):
+        if double([my_tiles[i], my_tiles[i + 1]]):
             test_tiles = [tile for tile in my_tiles]
             double_tiles = [(-1, [test_tiles.pop(i + 1), test_tiles.pop(i)])]
             tiles_comp = double_tiles
             tiles_comp += composition_mianzi(test_tiles)
             tiles_comp += organized_tiles
-            tiles_comp.sort()
+            #tiles_comp.sort()
             if len(tiles_comp) == 5:
                 return tiles_comp
             elif len(tiles_comp) == 4:

@@ -28,7 +28,7 @@ class game:
         time_stamp is an attribute of game, it will renew in each new game, and increament when every movement have been 
         down.
         
-        behavior can be 'chi', 'peng', 'gang', 'add_gang', 'hidden_gang', 'discard', 'riichi', 'zimo', 'rong_hu', 'liu_ju_ting_pai'
+        behavior can be 'mopai', 'chi', 'peng', 'gang', 'add_gang', 'hidden_gang', 'discard', 'riichi', 'zimo', 'rong_hu', 'liu_ju'
         
         tile should be in the form of (value, id)
     '''
