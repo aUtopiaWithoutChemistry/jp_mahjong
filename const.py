@@ -1,0 +1,5 @@
+LAO_TOU = [1, 9, 11, 19, 21, 29]
+FENG = [31, 32, 33, 34]
+SAN_YUAN = [41, 42, 43]
+ZI = FENG + SAN_YUAN
+YAO_JIU = LAO_TOU + ZI
