@@ -166,9 +166,12 @@ def yi_fa(player, all_behavior):
         should no one chi, peng, or gang, if this player can win by other's add_gang, then 
         add_gang invalid, this player still can yifa
     '''
+    riichi_turn = -1
     for behavior in all_behavior:
         if behavior[2] == 'riichi' and behavior[1] == player.number:
             riichi_turn = behavior[0]
+        else:
+            return 0
     
     if all_behavior[-1][0] - riichi_turn <= 8:
         for behavior in all_behavior[riichi_turn:]:
@@ -177,21 +180,36 @@ def yi_fa(player, all_behavior):
     return 0
 
     
-    
 def clear_zimo(player, all_behavior):
     ''' 门前清自摸和 clear win + zimo
     '''
     return 1 if regular_clear_win(player.my_tiles) and all_behavior[-1][2] == 'zimo' else 0
 
 
-def ping_hu(player):
+def ping_hu(player, cur_chang):
     ''' 平和 don't have extra fu except from zimo, which means only have shunzi and 
         double can't be zifeng, changfeng, and sanyuan tiles, and should ting pai for two tiles
-        tiles = [(), (), (), (), (), (), (), (), (), (), (), (), (), ()]
     '''
     groups = composition(player)
+    for group in groups:
+        if group[0] not in [-1, 0]:
+            return 0
+        if group[0][0][0] in [player.my_position + 31, cur_chang + 31, 41, 42, 43]:
+            return 0
     return 1
     
+    
+def yi_bei_kou(player):
+    ''' 一杯口 have two exact same shunzi, can't fulu
+    '''
+    cnt = 0
+    groups = composition(player)
+    for group in groups:
+        if group[0] == 2:
+            cnt += 1
+    if cnt == 1 and player.chi_peng_gang_tiles == []:
+        return 1
+    return 0
     
 # special yi ####################################################################################################
 def seven_double(tiles):
@@ -346,13 +364,13 @@ def double(tiles):
     return True if tiles[0][0] == tiles[1][0] else False
 
 
-def yi_bei_kou(tiles):
+def same_shunzi(tiles):
     ''' test for yi_bei_kou, which means there are two exact same shunzi in my_tiles
     
         helper function, so take tiles as input
 
         >>> tiles = [(1,0), (1,1), (2,4), (2,5), (3,8), (3,9)]
-        >>> yi_bei_kou(tiles)
+        >>> same_shunzi(tiles)
         True
     '''
     tiles.sort()
