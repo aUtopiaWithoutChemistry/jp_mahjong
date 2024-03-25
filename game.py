@@ -33,12 +33,13 @@ class game:
         tile should be in the form of (value, id)
     '''
     all_behaviors = []       
-    
+
     ace = []                # 14 in total, lingshang and dora tiles are in this
     ling_shang_tiles = []   # max 4, only can be access when someone gang
+    
     surface_dora_tiles = [] # max 1, visable from starting
-    hidden_dora_tiles = []  # max 4, every riichi from player will show one more
     gang_dora_tiles = []    # max 4, every gang from player will show one more
+    hidden_dora_tiles = []  # max 5, only show the same number of shown surface and gang dora
 
 
     def __init__(self, total_chang=2, total_player=4):
