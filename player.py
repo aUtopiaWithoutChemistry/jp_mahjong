@@ -19,12 +19,15 @@ class player:
     chi_peng_gang_tiles = []
     
 
-    def __init__(self, number=0, score=25000, tiles=[], position=0, is_ai=False):
+    def __init__(self, number=0, score=25000, tiles=[], position=0, is_ai=False, chi_peng_gang_tiles=[],
+                 my_waste=[]):
         self.number = number
         self.score = score
         self.my_tiles = tiles
         self.my_position = position
         self.is_ai = is_ai
+        self.chi_peng_gang_tiles = chi_peng_gang_tiles
+        self.my_waste = my_waste
 
 
     # all the movement can be done by players integraded both
