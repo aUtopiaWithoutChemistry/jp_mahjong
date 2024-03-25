@@ -474,6 +474,74 @@ def qing_yi_se(player):
     return 0
 
 
+# 役满役 #####################################################################
+def da_san_yuan(player):
+    cnt = 0
+    groups = composition(player)
+    for group in groups:
+        if group[0] in KE_ZI + GANG_ZI and group[1][0][0] in SAN_YUAN:
+            cnt += 1
+    if cnt == 3:
+        return 13
+    return 0
+
+
+def xiao_si_xi(player):
+    cnt = 0
+    groups = composition(player)
+    for group in groups:
+        if group[0] in QUE_TOU and group[1][0][0] in FENG:
+            cnt += 1
+        elif group[0] in KE_ZI + GANG_ZI and group[1][0][0] in FENG:
+            cnt += 10
+    if cnt == 31:
+        return 13
+    return 0
+
+
+def da_si_xi(player):
+    cnt = 0
+    groups = composition(player)
+    for group in groups:
+        if group[0] in KE_ZI + GANG_ZI and group[1][0][0] in FENG:
+            cnt += 10
+    if cnt == 40:
+        return 13
+    return 0
+
+
+def zi_yi_se(player):
+    if seven_double(player) != 0 or dui_dui_hu(player) != 0:
+        tiles = player.my_tiles
+        for i in range(len(player.chi_peng_gang_tiles)):
+            tiles += player.chi_peng_gang_tiles[i][1]
+        for tile in tiles:
+            if tile[0] not in ZI:
+                return 0
+        return 13
+    return 0
+
+
+def lv_yi_se(player):
+    tiles = player.my_tiles
+    for i in range(len(player.chi_peng_gang_tiles)):
+        tiles += player.chi_peng_gang_tiles[i][1]
+    for tile in tiles:
+        if tile[0] not in [22, 23, 24, 26, 28, 42]:
+            return 0
+    return 13
+
+
+def qing_lao_tou(player):
+    if dui_dui_hu(player) != 0:
+        tiles = player.my_tiles
+        for i in range(len(player.chi_peng_gang_tiles)):
+            tiles += player.chi_peng_gang_tiles[i][1]
+        for tile in tiles:
+            if tile[0] not in YAO_JIU:
+                return 0
+        return 13
+
 # special yi ####################################################################################################
 def seven_double(player):
     ''' check if the player's tiles fit the seven double

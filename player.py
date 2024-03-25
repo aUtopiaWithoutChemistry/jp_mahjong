@@ -12,7 +12,7 @@ class player:
     my_waste = []
     
     ''' tiles in chi_peng_gang_tiles will store in group, like
-            [(10, [1, 2, 3]), (11, [5, 5, 0]), (12, [41, 41, 41, 41]), (13, [42, 42, 42, 42])]
+            [(10, [(1,0), (2,0), (3,0)]), (11, [(5,0), (5,), (5,0)]), (12, [(41,0), (41,0), (41,0), (41,0)]), (13, [(42,0), (42,0), (42,0), (42,0)])]
         each group contains two elements, the first represent it's type, 10 is chi, 11 is peng, 
         12 is gang, 13 is hidden_gang. the second element is a list shows all the tiles in this group.
     '''
