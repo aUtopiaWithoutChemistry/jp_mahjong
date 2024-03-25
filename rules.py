@@ -1,4 +1,4 @@
-from element import tiles_to_value, all_tiles
+from element import tiles_to_value, value_to_tiles, all_tiles
 from player import player
 from const import *
 
@@ -542,6 +542,41 @@ def qing_lao_tou(player):
                 return 0
         return 13
 
+
+# 役满役 门前清 ##############################################################
+def si_an_ke(player, all_behavior):
+    groups = composition(player)
+    cnt = 0
+    for group in groups:
+        if group[0] in [1, 13]:
+            cnt += 1
+        
+    if cnt == 4:
+        if all_behavior[-1][2] == 'ronghu':
+            return san_an_ke(player) + dui_dui_hu(player)
+        return 13
+    return 0
+    
+    
+def jiu_lian_bao_deng(player):
+    if (qing_yi_se(player) != 0):
+        tile_type = player.my_tiles[0][0] // 10
+        groups = composition(player)
+        cnt = 0
+        for group in groups:
+            if group[0] == 1:
+                if group[1][0][0] == tile_type * 10 + 1 or group[1][0][0] == tile_type * 10 + 9:
+                    cnt += 1
+                    
+        contains_all = True
+        all_tiles = tiles_to_value(player.my_tiles)
+        for i in range(1,10):
+            if i not in all_tiles:
+                contains_all = False
+                
+        if cnt > 0 and contains_all == True:
+            return 13
+        return 0
 # special yi ####################################################################################################
 def seven_double(player):
     ''' check if the player's tiles fit the seven double
@@ -810,22 +845,24 @@ def composition(player):
         >>> player1 = player()
         >>> player1.my_tiles = [(1,0), (1,1), (1,2), (2,4), (3,8), (4,12), (5,16), (5,18), (6,23), (7,24), (8,31), (9,32), (9,33), (9,34)]
         >>> composition(player1)
-        [(-1, [(5, 18), (5, 16)]), (1, [(1, 0), (1, 1), (1, 2)]), (0, [(2, 4), (3, 8), (4, 12)]), (0, [(6, 23), (7, 24), (8, 31)]), (1, [(9, 32), (9, 33), (9, 34)])]
+        [(-1, [(5, 16), (5, 18)]), (1, [(1, 0), (1, 1), (1, 2)]), (0, [(2, 4), (3, 8), (4, 12)]), (0, [(6, 23), (7, 24), (8, 31)]), (1, [(9, 32), (9, 33), (9, 34)])]
         >>> player1.my_tiles = [(1,0), (1,0), (1,0), (2,0), (2,0), (2,0), (3,0), (3,0), (42,0), (42,0), (5,0), (5,0), (6,0), (6,0)]
         >>> composition(player1)
         False
         >>> player1.my_tiles = [(1,0), (1,1)]
         >>> player1.chi_peng_gang_tiles = [(10, [(2,4), (2,5), (2,6)]), (10, [(3,8), (3,9), (3,10)]), (10, [(4,12), (4,13), (4,14)]), (10, [(5,16), (5,17), (5,19)])]
         >>> composition(player1)
-        [(-1, [(1, 1), (1, 0)]), (10, [(2, 4), (2, 5), (2, 6)]), (10, [(3, 8), (3, 9), (3, 10)]), (10, [(4, 12), (4, 13), (4, 14)]), (10, [(5, 16), (5, 17), (5, 19)])]
+        [(-1, [(1, 0), (1, 1)]), (10, [(2, 4), (2, 5), (2, 6)]), (10, [(3, 8), (3, 9), (3, 10)]), (10, [(4, 12), (4, 13), (4, 14)]), (10, [(5, 16), (5, 17), (5, 19)])]
     '''
+    tiles_comp = []
     my_tiles = player.my_tiles
     organized_tiles = player.chi_peng_gang_tiles
     for i in range(len(my_tiles) - 1):
         if double([my_tiles[i], my_tiles[i + 1]]):
             test_tiles = [tile for tile in my_tiles]
-            double_tiles = [(-1, [test_tiles.pop(i + 1), test_tiles.pop(i)])]
+            double_tiles = [(-1, [test_tiles.pop(i), test_tiles.pop(i)])]
             tiles_comp = double_tiles
+            test_tiles.sort()
             tiles_comp += composition_mianzi(test_tiles)
             tiles_comp += organized_tiles
             #tiles_comp.sort()
@@ -838,4 +875,4 @@ def composition(player):
             elif len(tiles_comp) == 3:
                 if tiles_comp[0][0] == 2 and tiles_comp[1][0] == 2:
                     return tiles_comp
-    return False
+    return tiles_comp

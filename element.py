@@ -51,11 +51,11 @@ def tiles_to_value(tiles):
     ''' This helper function can help previous written methods that based on ver -1.0's tiles
         representation smoothly transit to current version.
         from [(5, 16), (5, 19), (5, 17), (15, 55), (25, 91)]
-        to   [0, 5, 5, 10, 20]
+        to   [5, 5, 5, 10, 20]
         >>> tiles = [(5, 16), (5, 19), (5, 17), (15, 55), (25, 91)]
         >>> value = tiles_to_value(tiles)
         >>> value
-        [0, 5, 5, 10, 20]
+        [5, 5, 5, 10, 20]
     '''
     cur_tiles1 = [tile[0] for tile in tiles if tile[1] not in red_dora_id]
     # cur_tiles2 = [tile[0] - 5 for tile in tiles if tile[1] in red_dora_id]
