@@ -3,3 +3,9 @@ FENG = [31, 32, 33, 34]
 SAN_YUAN = [41, 42, 43]
 ZI = FENG + SAN_YUAN
 YAO_JIU = LAO_TOU + ZI
+
+QUE_TOU = -1
+FU_LU = [10, 11, 12]
+SHUN_ZI = [0, 10]
+KE_ZI = [1, 11]
+GANG_ZI = [12, 13]
