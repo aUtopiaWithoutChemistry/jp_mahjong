@@ -43,7 +43,7 @@ def regular_clear_win(player):
         >>> regular_clear_win(player1)
         True
     '''
-    return True if player.chi_peng_gang_tiles == [] and composition(player) else False
+    return True if (player.chi_peng_gang_tiles == [] and composition(player)) else False
 
 
 # TODO
@@ -544,7 +544,7 @@ def qing_lao_tou(player):
 
 
 # 役满役 门前清 ##############################################################
-def si_an_ke(player, all_behavior):
+def si_an_ke(player, all_behaviors):
     groups = composition(player)
     cnt = 0
     for group in groups:
@@ -552,7 +552,7 @@ def si_an_ke(player, all_behavior):
             cnt += 1
         
     if cnt == 4:
-        if all_behavior[-1][2] == 'ronghu':
+        if all_behaviors[-1][2] == 'ronghu':
             return san_an_ke(player) + dui_dui_hu(player)
         return 13
     return 0
@@ -577,6 +577,40 @@ def jiu_lian_bao_deng(player):
         if cnt > 0 and contains_all == True:
             return 13
         return 0
+    
+    
+def si_gang_zi(player):
+    groups = composition(player)
+    cnt = 0
+    for group in groups:
+        if group[0] in GANG_ZI:
+            cnt += 1
+    if cnt == 4:
+        return 13
+    return 0
+
+
+def tian_hu(all_behaviors, player):
+    if player.my_position == 0:
+        for i in all_behaviors[5:]:
+            if all_behaviors[i][1] == player.number and all_behaviors[i][2] == 'mopai':
+                if all_behaviors[i + 1][2] != 'zimo':
+                    return 0
+                else:
+                    return 13
+
+ 
+def di_hu(all_behaviors, player):
+    for i in all_behaviors[5:]:
+        if all_behaviors[i][2] in ['chi', 'peng', 'gang', 'hidden_gang']:
+            return 0
+        if all_behaviors[i][1] == player.number and all_behaviors[i][2] == 'mopai':
+            if all_behaviors[i + 1][2] != 'zimo':
+                return 0
+            else:
+                return 13
+
+
 # special yi ####################################################################################################
 def seven_double(player):
     ''' check if the player's tiles fit the seven double
@@ -875,4 +909,4 @@ def composition(player):
             elif len(tiles_comp) == 3:
                 if tiles_comp[0][0] == 2 and tiles_comp[1][0] == 2:
                     return tiles_comp
-    return tiles_comp
+    return False
