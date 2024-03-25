@@ -4,8 +4,15 @@ SAN_YUAN = [41, 42, 43]
 ZI = FENG + SAN_YUAN
 YAO_JIU = LAO_TOU + ZI
 
+
 QUE_TOU = -1
 FU_LU = [10, 11, 12]
 SHUN_ZI = [0, 10]
+
 KE_ZI = [1, 11]
+MING_KE = 11
+AN_KE = 1
+
 GANG_ZI = [12, 13]
+MING_GANG = 12
+AN_GANG = 13
