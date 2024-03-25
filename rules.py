@@ -1,10 +1,10 @@
 from element import tiles_to_value, all_tiles
 from player import player
+from const import *
 
 ''' TODO change the original function fit the new tile, the input tile should be in the form of
     (value, id) all functions can only take player and parametor from game as parameters
 '''
-
 
 # rules for winning
 def win(player):
@@ -29,10 +29,10 @@ def clear_win(player):
     return True if special_clear_win(player.my_tiles) or regular_clear_win(player) else False
 
 
-def special_clear_win(tiles):
+def special_clear_win(player):
     ''' check if 七对子 or 国士无双
     '''
-    return True if seven_double(tiles) == 7 or guo_shi(tiles) else False
+    return True if seven_double(player) == 7 or guo_shi(player) else False
 
 
 def regular_clear_win(player):
@@ -211,8 +211,176 @@ def yi_bei_kou(player):
         return 1
     return 0
     
+    
+# 二番役 ################################################################
+def dui_dui_hu(player):
+    groups = composition(player)
+    for group in groups:
+        if group[0] not in QUE_TOU + GANG_ZI + KE_ZI:
+            return 0
+    return 2
+
+
+def three_hidden_ke(player):
+    cnt = 0
+    groups = composition(player)
+    for group in groups:
+        if group[0] in [1, 13]:
+            cnt += 1
+    if cnt == 3:
+        return 2
+    else:
+        return 0
+
+
+def three_gang_zi(player):
+    cnt = 0
+    groups = composition(player)
+    for group in groups:
+        if group[0] in GANG_ZI:
+            cnt += 1
+    if cnt == 3:
+        return 2
+    else:
+        return 0
+    
+    
+def three_color_same_kezi(player):
+    kezi = []
+    groups = composition(player)
+    for group in groups:
+        if group[0] in KE_ZI + GANG_ZI:
+            kezi += [group[1][0][0]]
+    if len(kezi) == 3 and kezi[0] == kezi[1] == kezi[2]:
+        return 2
+    else:
+        return 0
+    
+    
+def hun_lao_tou(player):
+    if seven_double(player) or dui_dui_hu(player):
+        zi, lao_tou = False, False
+        groups = composition(player)
+        for group in groups:
+            if group[1][0][0] not in YAO_JIU:
+                return 0
+            else:
+                if group[1][0][0] in ZI:
+                    zi = True
+                if group[1][0][0] in LAO_TOU:
+                    lao_tou = True
+        if zi and lao_tou:
+            return 2
+    else:
+        return 0
+    
+
+def xiao_san_yuan(player):
+    cnt = 0
+    groups = composition(player)
+    for group in groups:
+        if group[0] == QUE_TOU and group[1][0][0] in SAN_YUAN:
+            cnt += 1
+        if group[0] in KE_ZI + GANG_ZI and group[1][0][0] in SAN_YUAN:
+            cnt += 10
+    if cnt == 21:
+        return 2
+    return 0
+
+
+# 二番役 副露减一番 ###########################################################
+def three_color_same_shunzi(player):
+    groups = composition(player)
+    shun_zi_list = []
+    group_list = []
+    for group in groups:
+        group_list.append(group[0])
+        if group[0] in SHUN_ZI:
+            for tile in group[1]:
+                shun_zi_list.append(tile[0])
+    shun_zi_set = set(shun_zi_list)
+    
+    if len(shun_zi_set) == 3:
+        for cond in FU_LU:
+            if cond in group_list:
+                return 1
+        return 2
+    return 0
+
+
+def yi_qi_guan_tong(player):
+    groups = composition(player)
+    group_list = []
+    first, second, third = False, False, False
+    for group in groups:
+        group_list.append(group[0])
+        if group[0] in SHUN_ZI:
+            tiles = []
+            for tile in group[1]:
+                tiles += [tile[0]]
+            tiles.sort()
+            if tiles == [1, 2, 3]:
+                first = True
+            elif tiles == [4, 5, 6]:
+                second = True
+            elif tiles == [7, 8, 9]:
+                third == True
+                
+    if first and second and third:
+        for cond in FU_LU:
+            if cond in group_list:
+                return 1
+        return 2
+    return 0
+    
+
+def hun_quan_dai_yao_jiu(player):
+    groups = composition(player)
+    group_list = []
+    zi_tile, lao_tou_tile = False, False
+    for group in groups:
+        group_list.append(group[0])
+        cnt = 0
+        for tile in group[1]:
+            if tile[0] in YAO_JIU:
+                cnt += 1
+                if tile[0] in ZI:
+                    zi_tile = True
+                if tile[0] in LAO_TOU:
+                    lao_tou_tile = True
+        if cnt == 0:
+            return 0
+    
+    if zi_tile and lao_tou_tile:
+        for cond in SHUN_ZI:
+            if cond in group_list:
+                for cond in FU_LU:
+                    if cond in group_list:
+                        return 1
+                return 2
+    return 0
+
+
+def two_riichi(player, all_behaviors):
+    behaviors = []
+    for i in range(len(all_behaviors[5:])):
+        behaviors.append(all_behaviors[5 + i][2])
+        if all_behaviors[5 + i][1] == player.number:
+            behaviors.append(all_behaviors[6 + i][2])
+            break
+    if behaviors[-1] == 'riichi':
+        for cond in ['chi', 'peng', 'gang', 'hidden_gang']:
+            if cond not in behaviors:
+                return 2
+    return 0        
+    
+    
+        
+        
+            
+    
 # special yi ####################################################################################################
-def seven_double(tiles):
+def seven_double(player):
     ''' check if the player's tiles fit the seven double
     
         helper funciton, so take tiles as input
@@ -221,10 +389,13 @@ def seven_double(tiles):
         >>> seven_double(tiles)
         True
     '''
-    return all(tiles[i][0] == tiles[i + 1][0] for i in range(0, 13, 2)) 
+    tiles = player.my_tiles
+    if all(tiles[i][0] == tiles[i + 1][0] for i in range(0, 13, 2)):
+        return 2
+    return 0
 
 
-def guo_shi(tiles):
+def guo_shi(player):
     ''' check for if the player's tiles fit the requsite of guo_shi
     
         helper function, so take tiles as input
@@ -233,8 +404,8 @@ def guo_shi(tiles):
         >>> guo_shi(tiles)
         True
     '''
-    tiles = tiles_to_value(tiles)
-    standard_guo_shi = [1,9,11,19,21,29,31,32,33,34,41,42,43]
+    tiles = tiles_to_value(player.my_tiles)
+    standard_guo_shi = [1, 9, 11, 19, 21, 29, 31, 32, 33, 34, 41, 42, 43]
     for tile in standard_guo_shi:
         if tile not in tiles:
             return False
