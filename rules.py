@@ -117,7 +117,7 @@ def yi_tiles(player, cur_chang):
         >>> player1.chi_peng_gang_tiles = [(11, [(31,0), (31,0), (31,0)])]
         >>> cur_chang = 0
         >>> yi_tiles(player1, cur_chang)
-        True
+        1
     '''
     valid_yi = [cur_chang + 31, player.my_position + 31, 41, 42, 43]
     all_tiles_groups = composition(player)
@@ -478,11 +478,10 @@ def qing_yi_se(player):
 def seven_double(player):
     ''' check if the player's tiles fit the seven double
     
-        helper funciton, so take tiles as input
-        
-        >>> tiles = [(1,0),(1,1),(3,9),(3,11),(5,16),(5,17),(21,72),(21,73),(32,113),(32,114),(33,116),(33,117),(42,128),(42,129)]
-        >>> seven_double(tiles)
-        True
+        >>> player1 = player()
+        >>> player1.my_tiles = [(1,0),(1,1),(3,9),(3,11),(5,16),(5,17),(21,72),(21,73),(32,113),(32,114),(33,116),(33,117),(42,128),(42,129)]
+        >>> seven_double(player1)
+        2
     '''
     tiles = player.my_tiles
     if all(tiles[i][0] == tiles[i + 1][0] for i in range(0, 13, 2)):
@@ -495,9 +494,10 @@ def guo_shi(player):
     
         helper function, so take tiles as input
 
-        >>> tiles = [(1,1), (9,32), (11,36), (19,69), (21,75), (29,104), (31,110), (32,113), (33,119), (34,123), (41,124), (42,128), (43,132), (43,135)]
-        >>> guo_shi(tiles)
-        True
+        >>> player1 = player()
+        >>> player1.my_tiles = [(1,1), (9,32), (11,36), (19,69), (21,75), (29,104), (31,110), (32,113), (33,119), (34,123), (41,124), (42,128), (43,132), (43,135)]
+        >>> guo_shi(player1)
+        13
     '''
     tiles = tiles_to_value(player.my_tiles)
     standard_guo_shi = [1, 9, 11, 19, 21, 29, 31, 32, 33, 34, 41, 42, 43]
@@ -518,13 +518,13 @@ def split_tiles(cond):
         >>> tiles = [(5,19), (5,16), (8,28), (8,29), (8,30), (41,124), (41,125), (41,126), (42,128), (42,129), (42,130), (43,132), (43,133), (43,134)]
         >>> man_tiles = split_tiles(man)(tiles)
         >>> man_tiles
-        [(5,19), (5,16), (8,28), (8,29), (8,30)]
+        [(5, 19), (5, 16), (8, 28), (8, 29), (8, 30)]
         >>> feng_tiles = split_tiles(feng)(tiles)
         >>> feng_tiles
         []
         >>> sanyuan_tiles = split_tiles(sanyuan)(tiles)
         >>> sanyuan_tiles
-        [(41,124), (41,125), (41,126), (42,128), (42,129), (42,130), (43,132), (43,133), (43,134)]
+        [(41, 124), (41, 125), (41, 126), (42, 128), (42, 129), (42, 130), (43, 132), (43, 133), (43, 134)]
     '''
     def func(tiles):
         sub_list = [tile for tile in tiles if cond(tile[0])]
@@ -657,7 +657,7 @@ def overlapping(tiles):
 
         >>> tiles = [(1,0), (1,1), (2,5), (2,6), (3,9), (3,10)]
         >>> overlapping(tiles)
-        True
+        False
         >>> tiles = [(3,10), (4,13), (4,14), (5,18), (5,19), (6,22)]
         >>> overlapping(tiles)
         True
@@ -742,8 +742,8 @@ def composition(player):
         >>> player1 = player()
         >>> player1.my_tiles = [(1,0), (1,1), (1,2), (2,4), (3,8), (4,12), (5,16), (5,18), (6,23), (7,24), (8,31), (9,32), (9,33), (9,34)]
         >>> composition(player1)
-        [(-1, [(5,16), (5,18)])), (0, [(2,4), (3,8), (4,12)]), (0, [(6,23), (7,24), (8,31)]), (1, [(1,0), (1,1), (1,2)], (1, [(9,32), (9,33), (9,34)])]
-        >>> player1.my_tiles = [1, 1, 1, 2, 2, 2, 3, 3, 42, 42, 5, 5, 6, 6]
+        [(-1, [(5, 18), (5, 16)]), (1, [(1, 0), (1, 1), (1, 2)]), (0, [(2, 4), (3, 8), (4, 12)]), (0, [(6, 23), (7, 24), (8, 31)]), (1, [(9, 32), (9, 33), (9, 34)])]
+        >>> player1.my_tiles = [(1,0), (1,0), (1,0), (2,0), (2,0), (2,0), (3,0), (3,0), (42,0), (42,0), (5,0), (5,0), (6,0), (6,0)]
         >>> composition(player1)
         False
         >>> player1.my_tiles = [(1,0), (1,1)]
