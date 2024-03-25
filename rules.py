@@ -69,15 +69,15 @@ def check_fu(player):
 def bp(fan, fu):
     basic_point = fu * 2 ** (fan + 2)
     if basic_point > 2000:
-        if fan <= 5:
+        if fan <= 5:                    # 满贯
             basic_point = 2000
-        elif fan >= 6 and fan <= 7:
+        elif fan >= 6 and fan <= 7:     # 跳满
             basic_point = 3000
-        elif fan >= 8 and fan <= 10:
+        elif fan >= 8 and fan <= 10:    # 倍满
             basic_point = 4000
-        elif fan >= 11 and fan <= 12:
+        elif fan >= 11 and fan <= 12:   # 三倍满
             basic_point = 6000
-        elif fan >= 13:
+        elif fan >= 13:                 # 役满
             basic_point = 8000
     return basic_point
 
@@ -221,7 +221,7 @@ def dui_dui_hu(player):
     return 2
 
 
-def three_hidden_ke(player):
+def san_an_ke(player):
     cnt = 0
     groups = composition(player)
     for group in groups:
@@ -233,7 +233,7 @@ def three_hidden_ke(player):
         return 0
 
 
-def three_gang_zi(player):
+def san_gang_zi(player):
     cnt = 0
     groups = composition(player)
     for group in groups:
@@ -245,7 +245,7 @@ def three_gang_zi(player):
         return 0
     
     
-def three_color_same_kezi(player):
+def san_se_tong_ke(player):
     kezi = []
     groups = composition(player)
     for group in groups:
@@ -289,12 +289,12 @@ def xiao_san_yuan(player):
 
 
 # 二番役 副露减一番 ###########################################################
-def three_color_same_shunzi(player):
+def san_se_tong_shun(player):
     groups = composition(player)
     shun_zi_list = []
-    group_list = []
+    group_type = []
     for group in groups:
-        group_list.append(group[0])
+        group_type.append(group[0])
         if group[0] in SHUN_ZI:
             for tile in group[1]:
                 shun_zi_list.append(tile[0])
@@ -302,7 +302,7 @@ def three_color_same_shunzi(player):
     
     if len(shun_zi_set) == 3:
         for cond in FU_LU:
-            if cond in group_list:
+            if cond in group_type:
                 return 1
         return 2
     return 0
@@ -310,10 +310,10 @@ def three_color_same_shunzi(player):
 
 def yi_qi_guan_tong(player):
     groups = composition(player)
-    group_list = []
+    group_type = []
     first, second, third = False, False, False
     for group in groups:
-        group_list.append(group[0])
+        group_type.append(group[0])
         if group[0] in SHUN_ZI:
             tiles = []
             for tile in group[1]:
@@ -328,7 +328,7 @@ def yi_qi_guan_tong(player):
                 
     if first and second and third:
         for cond in FU_LU:
-            if cond in group_list:
+            if cond in group_type:
                 return 1
         return 2
     return 0
@@ -336,10 +336,10 @@ def yi_qi_guan_tong(player):
 
 def hun_quan_dai_yao_jiu(player):
     groups = composition(player)
-    group_list = []
+    group_type = []
     zi_tile, lao_tou_tile = False, False
     for group in groups:
-        group_list.append(group[0])
+        group_type.append(group[0])
         cnt = 0
         for tile in group[1]:
             if tile[0] in YAO_JIU:
@@ -353,9 +353,9 @@ def hun_quan_dai_yao_jiu(player):
     
     if zi_tile and lao_tou_tile:
         for cond in SHUN_ZI:
-            if cond in group_list:
+            if cond in group_type:
                 for cond in FU_LU:
-                    if cond in group_list:
+                    if cond in group_type:
                         return 1
                 return 2
     return 0
@@ -368,17 +368,112 @@ def two_riichi(player, all_behaviors):
         if all_behaviors[5 + i][1] == player.number:
             behaviors.append(all_behaviors[6 + i][2])
             break
-    if behaviors[-1] == 'riichi':
-        for cond in ['chi', 'peng', 'gang', 'hidden_gang']:
-            if cond not in behaviors:
-                return 2
+    
+    if player.chi_peng_gang_tiles == []:
+        if behaviors[-1] == 'riichi':
+            for cond in ['chi', 'peng', 'gang', 'hidden_gang']:
+                if cond not in behaviors:
+                    return 2
     return 0        
     
     
+# 三番役 #####################################################################
+def er_bei_kou(player):
+    groups = composition(player)
+    for group in groups:
+        if group[0] == 3:
+            return 3
+    return 0
+
+    
+# 三番役 副露减一番 ###########################################################
+def hun_yi_se(player):
+    groups = composition(player)
+    all_tiles = []
+    group_type = []
+    for group in groups:
+        group_type.append(group[0])
+        all_tiles += group[1]
+    all_tiles = tiles_to_value(all_tiles)
+    
+    nums = []
+    for tile in all_tiles:
+        if tile not in ZI:
+            nums += [tile]
+    
+    if len(nums) == len(tile):
+        return 0
+    for n in range(3):
+        if all(num // 10 == n for num in nums):
+            for cond in FU_LU:
+                if cond in group_type:
+                    return 2
+            return 3
+    return 0
+
+
+def chun_quan_dai_yao_jiu(player):
+    groups = composition(player)
+    group_type = []
+    for group in groups:
+        group_type.append(group[0])
+        tiles = tiles_to_value(group[1])
+        contains = False
+        for tile in tiles:
+            if tile in YAO_JIU:
+                contains = True
+        if contains == False:
+            return 0
         
-        
+    for cond in SHUN_ZI:
+        if cond in group_type:
+            for cond in FU_LU:
+                if cond in group_type:
+                    return 2
+            return 3
+    return 0
             
     
+# 满贯役 #####################################################################
+def liu_ju_man_guan(all_behaviors, player):
+    cond = True
+    if all_behaviors[-1] == 'liuju':
+        for behavior in all_behaviors:
+            if behavior[1] == player.number and behavior[2] == 'discard':
+                if behavior[3][0] not in YAO_JIU:
+                    cond = False
+        
+        for i in range(len(all_behaviors)):
+            behavior = all_behaviors[i]
+            next_behavior = all_behaviors[i + 1]
+            if behavior[1] == player.number and behavior[2] == 'discard':
+                if next_behavior[2] in ['chi', 'peng', 'gang']:
+                    cond = False
+                    
+    if cond == True:
+        return 5
+    else:
+        return 0
+
+
+# 六番役 副露减一番 #####################################################################
+def qing_yi_se(player):
+    groups = composition(player)
+    group_type = []
+    tiles = []
+    for group in groups:
+        group_type.append(group[0])
+        tiles += group[1]
+    
+    for i in range(3):
+        if all(tile[0] // 10 == i for tile in tiles):
+            for cond in FU_LU:
+                if cond in group_type:
+                    return 5
+            return 6
+    return 0
+
+
 # special yi ####################################################################################################
 def seven_double(player):
     ''' check if the player's tiles fit the seven double
@@ -408,12 +503,12 @@ def guo_shi(player):
     standard_guo_shi = [1, 9, 11, 19, 21, 29, 31, 32, 33, 34, 41, 42, 43]
     for tile in standard_guo_shi:
         if tile not in tiles:
-            return False
+            return 0
         
     for tile in tiles:
         if tile not in standard_guo_shi:
-            return False
-    return True
+            return 0
+    return 13
 
 
 #####################################################################################################################################
@@ -578,6 +673,20 @@ def overlapping(tiles):
     return True if shun_zi([tiles[0], tiles[1], tiles[3]]) and shun_zi([tiles[2], tiles[4], tiles[5]]) else False
 
 
+def overlapping_same_shunzi(tiles):
+    tiles.sort()
+    for tile in tiles:
+        if tile[0] > 30:
+            return False
+        
+    test_tiles = tiles_to_value(tiles)
+    for i in range(10):
+        if (test_tiles == [i, i, i, i, i+1, i+1, i+1, i+1, i+2, i+2, i+2, i+2] or
+            test_tiles == [i, i, i+1, i+1, i+1, i+1, i+2, i+2, i+2, i+2, i+3, i+3]):
+            return True
+    return False
+
+
 def composition_mianzi(tiles):
     ''' check how many mianzi are there in tiles, this often apply on tiles that
         removed double, which can avoid some errors
@@ -602,13 +711,15 @@ def composition_mianzi(tiles):
         return_value, remain = [(0, tiles[:3])], tiles[3:]
     elif len(tiles) > 2 and ke_zi(tiles[:3]):
         return_value, remain = [(1, tiles[:3])], tiles[3:]
-    elif len(tiles) > 5 and yi_bei_kou(tiles[:6]):
+    elif len(tiles) > 5 and same_shunzi(tiles[:6]):
         return_value, remain = [(2, tiles[:6])], tiles[6:]
     elif len(tiles) > 5 and overlapping(tiles[:6]):
         original_list = tiles[:6]
         new_set = set(original_list)
         new_list = list(new_set)[:3]
         return_value = [(1, new_list)]
+    elif len(tiles) == 12 and overlapping_same_shunzi(tiles):
+        return_value, remain = [(3, tiles)], []
         
         tmp = [item for item in new_list]
         for item in original_list:

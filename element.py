@@ -58,8 +58,8 @@ def tiles_to_value(tiles):
         [0, 5, 5, 10, 20]
     '''
     cur_tiles1 = [tile[0] for tile in tiles if tile[1] not in red_dora_id]
-    cur_tiles2 = [tile[0] - 5 for tile in tiles if tile[1] in red_dora_id]
-    cur_tiles = cur_tiles1 + cur_tiles2
+    # cur_tiles2 = [tile[0] - 5 for tile in tiles if tile[1] in red_dora_id]
+    cur_tiles = cur_tiles1 # + cur_tiles2
     cur_tiles.sort()
     return cur_tiles
 
