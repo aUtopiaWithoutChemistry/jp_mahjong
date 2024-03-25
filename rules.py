@@ -47,22 +47,123 @@ def regular_clear_win(player):
 
 
 # TODO
-def check_point(player):
-    fan = check_fan(player)
-    fu = check_fu(player)
-    basic_point = bp(fan, fu, player)
-    return False
+def basic_point_cal(player, cur_chang, this_game, all_behavior, dora):
+    fan = check_fan(player, cur_chang, this_game, all_behavior, dora)
+    fu = check_fu(player, cur_chang)
+    basic_point = bp(fan, fu)
+    return basic_point
 
 
-def check_fan(player):
+def check_fan(player, cur_chang, this_game, all_behavior, dora):
+    all_yi = [duan_yao_jiu,    yi_tiles,       he_di_mo_yu,        ling_shang_kai_hua, qiang_gang, 
+               hai_di_lao_yue,  riichi,         yi_fa,              clear_zimo,         ping_hu, 
+               yi_bei_kou,      dui_dui_hu,     san_an_ke,          san_gang_zi,        san_gang_zi, 
+               hun_lao_tou,     xiao_san_yuan,  san_se_tong_shun,   yi_qi_guan_tong,    hun_quan_dai_yao_jiu, 
+               two_riichi,      er_bei_kou,     hun_yi_se,          chun_quan_dai_yao_jiu, 
+               liu_ju_man_guan, qing_yi_se,     da_san_yuan,        xiao_si_xi,         da_si_xi, 
+               zi_yi_se,        lv_yi_se,       qing_lao_tou,       si_an_ke,           jiu_lian_bao_deng, 
+               si_gang_zi,      tian_hu,        di_hu,              guo_shi]
+    
+    need_player = [duan_yao_jiu, yi_bei_kou, dui_dui_hu, san_an_ke,
+                   san_gang_zi, san_se_tong_ke, hun_lao_tou, xiao_san_yuan,
+                   san_se_tong_shun, yi_qi_guan_tong, hun_quan_dai_yao_jiu,
+                   er_bei_kou, hun_yi_se, chun_quan_dai_yao_jiu, 
+                   qing_yi_se, da_san_yuan, xiao_si_xi, da_si_xi,
+                   zi_yi_se, lv_yi_se, qing_lao_tou, jiu_lian_bao_deng,
+                   si_gang_zi, guo_shi]
+    
+    need_player_cur_chang = [yi_tiles, ping_hu]
+    
+    need_this_game_all_behavior = [he_di_mo_yu, hai_di_lao_yue]
+    
+    need_all_behavior = [ling_shang_kai_hua, qiang_gang]
+    
+    need_player_all_behavior = [riichi, yi_fa, clear_zimo, two_riichi,
+                                liu_ju_man_guan, si_an_ke, tian_hu, di_hu]
+    
     if seven_double(player.my_tiles) == 7:
         fan = 2
+    else:
+        fan = 0
+        for check in need_player:
+            fan += check(player)
+        for check in need_player_cur_chang:
+            fan += check(player, cur_chang)
+        for check in need_this_game_all_behavior:
+            fan += check(this_game, all_behavior)
+        for check in need_all_behavior:
+            fan += check(all_behavior)
+        for check in need_player_all_behavior:
+            fan += check(player, all_behavior)
+            
+    player_tiles = player.my_tiles
+    if player.chi_peng_gang_tiles != []:
+        player_tiles += [group[1] for group in player.chi_peng_gang_tiles]
+        
+    red_dora = [(5, 19), (15, 55), (25, 91)]
+    for tile in player_tiles:
+        # red dora
+        if tile in red_dora:
+            fan += 1
+        # game dora
+        if tile[0] in dora:
+            fan += 1
+            
     return fan
 
 
-def check_fu(player):
+def check_fu(player, cur_chang):
+    fu = 0
+    ZI_FENG = player.my_position + 31
+    CHANG_FENG = cur_chang + 31
+    KE_FENG = [tile for tile in FENG if tile != ZI_FENG and tile != CHANG_FENG]
+    
     if seven_double(player.my_tiles) == 7:
-        fu = 25
+        return 25
+    
+    if clear_zimo(player) and ping_hu(player):
+        return 20
+    
+    if ping_hu(player) and player.chi_peng_gnag_tile != []:
+        return 30
+    
+    groups = composition(player)
+    for group in groups:
+        tile = group[1][0][0]
+        
+        if group[0] == QUE_TOU:
+            if tile in ZI_FENG + CHANG_FENG + SAN_YUAN:
+                fu += 2
+            elif tile in LAO_TOU + ZHONG_ZHANG + KE_FENG:
+                fu += 0
+        
+        if group[0] == MING_KE:
+            if tile in ZHONG_ZHANG:
+                fu += 2
+            elif tile in YAO_JIU:
+                fu += 4
+        
+        if group[0] == AN_KE:
+            if tile in ZHONG_ZHANG:
+                fu += 4
+            elif tile in YAO_JIU:
+                fu += 8
+        
+        if group[0] == MING_GANG:
+            if tile in ZHONG_ZHANG:
+                fu += 8
+            elif tile in YAO_JIU:
+                fu += 16
+        
+        if group[0] == AN_GANG:
+            if tile in ZHONG_ZHANG:
+                fu += 16
+            elif tile in YAO_JIU:
+                fu += 32
+        
+        if fu % 10 != 0:
+            fu = 10 * ((fu // 10) + 1)
+            
     return fu
 
 
@@ -435,7 +536,7 @@ def chun_quan_dai_yao_jiu(player):
             
     
 # 满贯役 #####################################################################
-def liu_ju_man_guan(all_behaviors, player):
+def liu_ju_man_guan(player, all_behaviors):
     cond = True
     if all_behaviors[-1] == 'liuju':
         for behavior in all_behaviors:
@@ -590,7 +691,7 @@ def si_gang_zi(player):
     return 0
 
 
-def tian_hu(all_behaviors, player):
+def tian_hu(player, all_behaviors):
     if player.my_position == 0:
         for i in all_behaviors[5:]:
             if all_behaviors[i][1] == player.number and all_behaviors[i][2] == 'mopai':
@@ -600,7 +701,7 @@ def tian_hu(all_behaviors, player):
                     return 13
 
  
-def di_hu(all_behaviors, player):
+def di_hu(player, all_behaviors):
     for i in all_behaviors[5:]:
         if all_behaviors[i][2] in ['chi', 'peng', 'gang', 'hidden_gang']:
             return 0
