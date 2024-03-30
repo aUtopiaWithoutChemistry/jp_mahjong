@@ -29,7 +29,7 @@ def main():
     running = True
     
     # define a variable to control game status
-    game_state = "start"  # start, game, end
+    game_state = "start"  # start, game, check_point, end
     
     # main loop
     while running:
@@ -63,16 +63,33 @@ def main():
                 tile will display one by one at the bottom of the screen, when 
                 user click one of its tile, the tile will be move up half its 
                 height to show it has been choosen. Every time that user could 
-                have some movement choises like chi, peng, their w
+                have some movement choises like chi, peng, there will be a small
+                button to show the movement choises. After user click the button,
+                then this movement will be done and next player will play. After 
+                at least one player finished hu, then game will change to check
+                point page. 
             '''
+            
             pass
             
         # check point page
         elif game_state == "check_point":
+            ''' in the check point page, user can see how much points each player 
+                earns from winning the game, and also see the winner of the game.
+                After checking the points, user can click the continue button to 
+                go to next round, if this is the last round, user can click the
+                end button to end the game.
+            '''
+            
             pass
         
         # end page
         elif game_state == "end":
+            ''' in the end page, user can see the final score of each player, and 
+                the winner of the game. After the game is over, user can click next
+                button to start a new game or exit button to quit the game.
+            '''
+            
             pass
         
 if __name__=="__main__":
