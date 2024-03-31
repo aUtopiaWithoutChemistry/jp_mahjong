@@ -16,7 +16,13 @@ def main():
     
     # create a surface on screen that has the size of 1280 x 960
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
+    
+    # load the background image for start page, and convert it to a pygame image object.
     start_background_image = pygame.image.load("../img/start_page.jpeg").convert()
+    
+    # load the background image for game page, and convert it to a pygame image object.
+    game_background_image = pygame.image.load("../img/mahjong_table.png").convert()
+    game_background_image = pygame.transform.scale(game_background_image, (HEIGHT, HEIGHT)) 
     
     # center the background image
     image_x = (WIDTH - start_background_image.get_width()) // 2
@@ -32,7 +38,7 @@ def main():
     running = True
     
     # define a variable to control game status
-    game_state = "start"  # start, game, check_point, end
+    game_state = "game"  # start, game, check_point, end
     
     # main loop
     while running:
@@ -42,13 +48,6 @@ def main():
             if event.type == pygame.QUIT:
                 # change the value to False, to exit the main loop
                 running = False
-        
-        # display the background image at the center of the screen
-        screen.blit(start_background_image, (image_x, image_y))
-        
-        # display the title at the center of the screen, red color and bold font
-        screen.blit(title_font.render("Aho Mahjong", True, 'red'), (WIDTH // 2 - 200, 100))
-        pygame.display.update()
         
         # keep the loop running 60 frame per second
         clock.tick(60)
@@ -60,8 +59,12 @@ def main():
                 button. After user click the start button, the game_state will 
                 change to game.
             '''
+            # display the background image at the center of the screen
+            screen.blit(start_background_image, (image_x, image_y))
             
-            pass
+            # display the title at the center of the screen, red color and bold font
+            screen.blit(title_font.render("Aho Mahjong", True, 'red'), (WIDTH // 2 - 200, 100))
+            pygame.display.update()
         
         # game page
         elif game_state == "game":
@@ -75,8 +78,9 @@ def main():
                 at least one player finished hu, then game will change to check
                 point page. 
             '''
-            
-            pass
+            # display the mahjong table at the left of screen
+            screen.blit(game_background_image, (0, 0))
+            pygame.display.update()
             
         # check point page
         elif game_state == "check_point":
