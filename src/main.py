@@ -1,7 +1,7 @@
 # import the pygame module, so you can use it
 import pygame
 
-WIDTH, HEIGHT = 840, 840
+WIDTH, HEIGHT = 1280, 960
  
 # define a main function
 def main():
@@ -16,11 +16,14 @@ def main():
     
     # create a surface on screen that has the size of 1280 x 960
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
-    background_image = pygame.image.load("../img/start_page.jpeg").convert()
+    start_background_image = pygame.image.load("../img/start_page.jpeg").convert()
     
     # center the background image
-    image_x = (WIDTH - background_image.get_width()) // 2
-    image_y = (HEIGHT - background_image.get_height()) // 2
+    image_x = (WIDTH - start_background_image.get_width()) // 2
+    image_y = (HEIGHT - start_background_image.get_height()) // 2
+    
+    # create a font
+    title_font = pygame.font.Font(None, 100)
     
     # control the frame rate
     clock = pygame.time.Clock()
@@ -41,7 +44,10 @@ def main():
                 running = False
         
         # display the background image at the center of the screen
-        screen.blit(background_image, (image_x, image_y))
+        screen.blit(start_background_image, (image_x, image_y))
+        
+        # display the title at the center of the screen, red color and bold font
+        screen.blit(title_font.render("Aho Mahjong", True, 'red'), (WIDTH // 2 - 200, 100))
         pygame.display.update()
         
         # keep the loop running 60 frame per second
