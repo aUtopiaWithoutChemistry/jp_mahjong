@@ -25,6 +25,7 @@
         tiles without change their value to match other rules, which is a extremly hard problem
         for jp_mahjong ver -1.1
 '''
+import pygame
 
 mahjong_tile_elements = {
     1: '1m', 2: '2m', 3: '3m', 4: '4m', 5: '5m', 6: '6m', 7: '7m', 8: '8m', 9: '9m',
@@ -38,58 +39,96 @@ find_num_using_tile = {v: k for k, v in mahjong_tile_elements.items()}
 
 key_list = list(mahjong_tile_elements.keys())
 
+red_dora_id = [19, 55, 91]
+red_dora_ele = {19: '0m', 55: '0p', 91: '0s'}
+
+
+class tile:
+    value = -1
+    id = -1
+    img = None
+    
+    def __init__(self, value, id):
+        self.value = value
+        self.id = id
+        if id not in red_dora_id:
+            self.img = pygame.image.load(f'../img/tiles/{mahjong_tile_elements[value]}.png')
+        else:
+            self.img = pygame.image.load(f'../img/tiles/{red_dora_ele[id]}.png')
+        # resize the tile
+        self.img = pygame.transform.smoothscale(surface=self.img, size=(49, 70))
+        self.hover = False
+        self.selected = False
+        self.last_click = 0
+        
+        
+    def select_by_id(self, id):
+        if id == self.id:
+            return self
+            
+            
+    def get_value_id(self):
+        return (self.value, self.id)
+        
+    
+    def get_effect(self):
+        return (self.hover, self.selected)
+    
+    
+    def set_effect(self, hover, selected):
+        self.hover = hover
+        self.selected = selected
+
+
 
 def generate_tiles():
     all_tiles = []
     for id in range(136):
         value = key_list[id // 4]
-        all_tiles.append((value ,id))
+        all_tiles.append(tile(value ,id))
     return all_tiles
 
-red_dora_id = [19, 55, 91]
+
+# def tiles_to_value(tiles):
+#     ''' This helper function can help previous written methods that based on ver -1.0's tiles
+#         representation smoothly transit to current version.
+#         from [(5, 16), (5, 19), (5, 17), (15, 55), (25, 91)]
+#         to   [5, 5, 5, 10, 20]
+#         >>> tiles = [(5, 16), (5, 19), (5, 17), (15, 55), (25, 91)]
+#         >>> value = tiles_to_value(tiles)
+#         >>> value
+#         [5, 5, 5, 10, 20]
+#     '''
+#     cur_tiles1 = [tile[0] for tile in tiles if tile[1] not in red_dora_id]
+#     # cur_tiles2 = [tile[0] - 5 for tile in tiles if tile[1] in red_dora_id]
+#     cur_tiles = cur_tiles1 # + cur_tiles2
+#     cur_tiles.sort()
+#     return cur_tiles
 
 
-def tiles_to_value(tiles):
-    ''' This helper function can help previous written methods that based on ver -1.0's tiles
-        representation smoothly transit to current version.
-        from [(5, 16), (5, 19), (5, 17), (15, 55), (25, 91)]
-        to   [5, 5, 5, 10, 20]
-        >>> tiles = [(5, 16), (5, 19), (5, 17), (15, 55), (25, 91)]
-        >>> value = tiles_to_value(tiles)
-        >>> value
-        [5, 5, 5, 10, 20]
-    '''
-    cur_tiles1 = [tile[0] for tile in tiles if tile[1] not in red_dora_id]
-    # cur_tiles2 = [tile[0] - 5 for tile in tiles if tile[1] in red_dora_id]
-    cur_tiles = cur_tiles1 # + cur_tiles2
-    cur_tiles.sort()
-    return cur_tiles
-
-
-def value_to_tiles(simple_tiles):
-    ''' This helper function can make previous single value into new tiles
-        this function will generate tiles in repeated id, only for test, it might generate 
-        unpredictable error in real game
-        from [0, 5, 5, 10, 20]
-        to   [(5, 16), (5, 16), (5, 19), (15, 55), (25, 91)]
-        >>> value = [0, 5, 5, 10, 20]
-        >>> new_tiles = value_to_tiles(value)
-        >>> new_tiles
-        [(5, 16), (5, 16), (5, 19), (15, 55), (25, 91)]
-    '''
-    new_tiles = []
-    for tile in simple_tiles:
-        if tile == 0:
-            new_tiles.append((5, 19))
-        elif tile == 10:
-            new_tiles.append((15, 55))
-        elif tile == 20:
-            new_tiles.append((25, 91))
-        else:
-            for ele in all_tiles:
-                if ele[0] == tile:
-                    new_tiles.append(ele)
-                    break
-    new_tiles.sort()
-    return new_tiles
-                
+# def value_to_tiles(simple_tiles):
+#     ''' This helper function can make previous single value into new tiles
+#         this function will generate tiles in repeated id, only for test, it might generate 
+#         unpredictable error in real game
+#         from [0, 5, 5, 10, 20]
+#         to   [(5, 16), (5, 16), (5, 19), (15, 55), (25, 91)]
+#         >>> value = [0, 5, 5, 10, 20]
+#         >>> new_tiles = value_to_tiles(value)
+#         >>> new_tiles
+#         [(5, 16), (5, 16), (5, 19), (15, 55), (25, 91)]
+#     '''
+#     new_tiles = []
+#     for tile in simple_tiles:
+#         if tile == 0:
+#             new_tiles.append((5, 19))
+#         elif tile == 10:
+#             new_tiles.append((15, 55))
+#         elif tile == 20:
+#             new_tiles.append((25, 91))
+#         else:
+#             for ele in all_tiles:
+#                 if ele[0] == tile:
+#                     new_tiles.append(ele)
+#                     break
+#     new_tiles.sort()
+#     return new_tiles
