@@ -1,4 +1,4 @@
-from element import tiles_to_value, value_to_tiles, generate_tiles
+from element import generate_tiles
 from player import player
 from const import *
 
