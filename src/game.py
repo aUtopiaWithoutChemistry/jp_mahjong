@@ -58,7 +58,7 @@ class game:
         positions = [0, 1, 2, 3]
         # create n players
         for n in range(total_player):
-            is_ai = True if n == 0 else False
+            is_ai = False if n == 0 else True
             pos = positions.pop(math.floor(random.random() * len(positions)))
             self.players.append(player(number=n, position=pos, is_ai=is_ai))
 
@@ -106,7 +106,7 @@ class game:
                 make it up to the nearest 100 number
             '''
             send = [player for player in self.players if player not in cur_players]
-            total_point = check_point(cur_players[0])
+            total_point = 0
             points_from_other = math.ceil(total_point // 100 / 3) * 100
             for i in range(3):
                 if send[i].my_position == self.cur_chang:
@@ -119,7 +119,7 @@ class game:
             loser, winners = cur_players[0], cur_players[1:]
             points = []
             for winner in winners:
-                points += [check_point(winner)]
+                points += 0
             for i in range(len(winner)):
                 self.transfer_point(points[i], loser, winner[i])
     
