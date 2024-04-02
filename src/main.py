@@ -1,8 +1,8 @@
-import os
 import pygame
 from game import game
+from element import generate_tiles
 
-WIDTH, HEIGHT = 1280, 960
+WIDTH, HEIGHT = 1200, 900
  
 # define a main function
 def main():
@@ -15,27 +15,21 @@ def main():
     pygame.display.set_icon(logo)
     pygame.display.set_caption('Aho Mahjong')
     
+    WIDTH, HEIGHT = pygame.display.get_desktop_sizes()[0]
+    
+    screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+    
     # create a surface on screen that has the size of 1280 x 960
-    screen = pygame.display.set_mode((WIDTH, HEIGHT))
+    #screen = pygame.display.set_mode((WIDTH, HEIGHT))
     screen_rect = screen.get_rect()
     
     # load the background image for start page, and convert it to a pygame image object.
     start_background_image = pygame.image.load('../img/start_page.jpeg').convert_alpha()
     start_background_rect = start_background_image.get_rect(center = (WIDTH // 2, HEIGHT // 2))
     
-    # load tile images
-    tile_images = []
-
-    tiles_folder = '../img/tiles'
-    tile_files = os.listdir(tiles_folder)
-
-    for file in tile_files:
-        file_path = os.path.join(tiles_folder, file)
-        tile_image = pygame.image.load(file_path).convert_alpha()
-        tile_images.append((tile_image, file))
-    
     # create a font
     title_font = pygame.font.Font(None, 100)
+    normal_font = pygame.font.Font(None, 50)
     
     # control the frame rate
     clock = pygame.time.Clock()
@@ -44,7 +38,7 @@ def main():
     running = True
     
     # define a variable to control game status
-    game_state = 'start'  # start, game, check_point, end
+    game_state = 'start_page'  # start, game, check_point, end
     
     # define a variable to control the initialization 
     init_state = False
@@ -59,10 +53,10 @@ def main():
                 running = False
         
         # keep the loop running 60 frame per second
-        clock.tick(60)
+        clock.tick(30)
         
         # start page
-        if game_state == 'start':
+        if game_state == 'start_page':
             ''' in the start page, user can see a big logo with Aho Mahjong and 
                 a menu to select difficulty and game type, then there is a start 
                 button. After user click the start button, the game_state will 
@@ -124,11 +118,19 @@ def main():
             inner_color = pygame.Color(79, 164, 133)
             pygame.draw.rect(screen, inner_color, inner_rect)
             pygame.draw.rect(screen, 'brown', table_rect, width=25, border_radius=20)
+            pygame.draw.line(screen, 'black', (25, 25), (900-25, 900-25))
+            pygame.draw.line(screen, 'black', (25, 900-25), (900-25, 25))
             
             # show current player's tile
-            # print(game_obj.players[0].my_tiles)
-            screen.blit(tile_images[0][0], (100, 800))
-            print(tile_images[0][1])
+            game_obj.players[0].display_my_tiles(screen)
+            
+            # show sort button
+            button_surf = normal_font.render('Sort', True, 'red')
+            button_rect = button_surf.get_rect(topleft=(920, 820))
+            pygame.draw.rect(screen, 'orange', button_rect, border_radius=10)
+            # screen.blit(button_surf, button_rect)
+            if button_rect.collidepoint(pygame.mouse.get_pos()) and pygame.mouse.get_pressed()[0]:
+                game_obj.players[0].sort_tiles()
             
             # update the display
             pygame.display.update()
