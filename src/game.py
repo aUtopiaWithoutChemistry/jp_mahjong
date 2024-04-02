@@ -1,6 +1,6 @@
 import random, math
-from element import all_tiles
-from rules import win, check_point
+from element import generate_tiles
+from rules import win
 from player import player
 
 # table class，包含四个玩家和剩余牌
@@ -46,18 +46,22 @@ class game:
         # decide how many chang in total should be played
         self.total_chang = total_chang
         self.total_player = total_player
-        self.cur_chang = 0
-        self.cur_ju = 0
+        self.cur_chang = -1
+        self.cur_ju = -1
         self.time_stamp = 0
 
         # add all mahjong tiles in this game
+        all_tiles = generate_tiles()
         for ele in all_tiles:
             self.this_game.append(ele)
 
+        positions = [0, 1, 2, 3]
         # create n players
         for n in range(total_player):
-            self.players.append(player(25000, [], n, False))
-    
+            is_ai = True if n == 0 else False
+            pos = positions.pop(math.floor(random.random() * len(positions)))
+            self.players.append(player(number=n, position=pos, is_ai=is_ai))
+
     
     def time_update(self):
         self.time_stamp += 1
@@ -142,7 +146,7 @@ class game:
         return self.players[index + 1] if index < 3 else self.players[0]
     
 
-    def game(self, cur_player, remain_tiles, storage_place):
+    def gaming(self, cur_player, remain_tiles, storage_place):
         ''' game is a recursive method, it only finished when one
             player wins or run out of tiles
         '''
@@ -172,7 +176,7 @@ class game:
             cur_player.hidden_gang()
             self.time_stamp += 1
             remain_tiles = self.ling_shang_tiles
-            self.game(cur_player, remain_tiles, storage_place)
+            self.gaming(cur_player, remain_tiles, storage_place)
 
         # check add_gang
         if cur_player.check_add_gang():
@@ -185,7 +189,7 @@ class game:
                 return True
 
             remain_tiles = self.ling_shang_tiles
-            self.game(cur_player, remain_tiles, storage_place)
+            self.gaming(cur_player, remain_tiles, storage_place)
 
         # check riichi
         if cur_player.check_riichi():
@@ -208,20 +212,20 @@ class game:
                 player.gang()
                 self.time_stamp += 1
                 remain_tiles = self.ling_shang_tiles
-                self.game(player, remain_tiles, storage_place)
+                self.gaming(player, remain_tiles, storage_place)
             
             if player.check_peng():
                 player.peng()
                 self.time_stamp += 1
-                self.game(player, remain_tiles, storage_place)
+                self.gaming(player, remain_tiles, storage_place)
             
             if player.check_chi():
                 player.chi()
                 self.time_stamp += 1
-                self.game(player, remain_tiles, storage_place)
+                self.gaming(player, remain_tiles, storage_place)
         
         cur_player = self.next_player(cur_player)
-        self.game(cur_player, remain_tiles, storage_place)
+        self.gaming(cur_player, remain_tiles, storage_place)
         
 
     def start_ju(self):
@@ -245,7 +249,7 @@ class game:
             self.this_game.append(ele)
 
         # shuffle all the tiles
-        self.this_game.shuffle()
+        random.shuffle(self.this_game)
 
         # prepare for ace tiles
         self.ace = []
@@ -266,15 +270,14 @@ class game:
             self.players[i].my_tiles = []
             self.players[i].my_waste = []
             self.players[i].chi_peng_gang_tiles = []
-
-            # change the position for every player
-            if self.players[i].position != 3:
-                self.players[i].position += 1
-            else:
-                self.players[i].position = 0
         
+        # every player get 14 tiles
+        for i in range(14):
+            for n in range(4):
+                self.players[n].mopai(self.this_game)
+                
         self.time_stamp = 0
-        self.game(self.players[0], self.this_game, storage_place)
+        # self.game(self.players[0], self.this_game, storage_place)
 
 
     # TODO
