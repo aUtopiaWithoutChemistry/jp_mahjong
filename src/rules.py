@@ -1,6 +1,8 @@
-from element import tiles_to_value, value_to_tiles, all_tiles
+from element import tiles_to_value, value_to_tiles, generate_tiles
 from player import player
 from const import *
+
+all_tiles = generate_tiles()
 
 ''' TODO change the original function fit the new tile, the input tile should be in the form of
     (value, id) all functions can only take player and parametor from game as parameters
