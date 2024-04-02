@@ -1,5 +1,6 @@
 import os
 import pygame
+from game import game
 
 WIDTH, HEIGHT = 1280, 960
  
@@ -10,21 +11,17 @@ def main():
     pygame.init()
     
     # load and set the logo
-    logo = pygame.image.load("../img/logo.jpeg")
+    logo = pygame.image.load('../img/logo.jpeg')
     pygame.display.set_icon(logo)
-    pygame.display.set_caption("Aho Mahjong")
+    pygame.display.set_caption('Aho Mahjong')
     
     # create a surface on screen that has the size of 1280 x 960
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     screen_rect = screen.get_rect()
     
     # load the background image for start page, and convert it to a pygame image object.
-    start_background_image = pygame.image.load("../img/start_page.jpeg").convert_alpha()
+    start_background_image = pygame.image.load('../img/start_page.jpeg').convert_alpha()
     start_background_rect = start_background_image.get_rect(center = (WIDTH // 2, HEIGHT // 2))
-    
-    # load the background image for game page, and convert it to a pygame image object.
-    game_background_image = pygame.image.load("../img/mahjong_table.png").convert()
-    game_background_image = pygame.transform.scale(game_background_image, (HEIGHT, HEIGHT)) 
     
     # load tile images
     tile_images = []
@@ -35,7 +32,7 @@ def main():
     for file in tile_files:
         file_path = os.path.join(tiles_folder, file)
         tile_image = pygame.image.load(file_path).convert_alpha()
-        tile_images.append(tile_image)
+        tile_images.append((tile_image, file))
     
     # create a font
     title_font = pygame.font.Font(None, 100)
@@ -48,6 +45,9 @@ def main():
     
     # define a variable to control game status
     game_state = 'start'  # start, game, check_point, end
+    
+    # define a variable to control the initialization 
+    init_state = False
     
     # main loop
     while running:
@@ -62,7 +62,7 @@ def main():
         clock.tick(60)
         
         # start page
-        if game_state == "start":
+        if game_state == 'start':
             ''' in the start page, user can see a big logo with Aho Mahjong and 
                 a menu to select difficulty and game type, then there is a start 
                 button. After user click the start button, the game_state will 
@@ -72,20 +72,24 @@ def main():
             screen.blit(start_background_image, start_background_rect)
             
             # display the title at the center of the screen, red color and bold font
-            screen.blit(title_font.render("Aho Mahjong", True, 'red'), (WIDTH // 2 - 200, 100))
+            title_surf = title_font.render('Aho Mahjong', True, 'white')
+            title_rect = title_surf.get_rect(center = (WIDTH // 2, 100))
+            screen.blit(title_surf, title_rect)
             
             # display the start button
             start_button_surf = title_font.render('Start game!', True, 'black')
             start_button_rect = start_button_surf.get_rect(center = (WIDTH // 2 + 300, HEIGHT // 2))
-            #pygame.draw.rect(screen, 'white', start_button_rect)
             pygame.draw.rect(screen, 'white', start_button_rect, border_radius=20)
             
             # check if there are mouseclick in this rectangle
             mouse_pos = pygame.mouse.get_pos()
             if event.type == pygame.MOUSEBUTTONUP and event.button == 1 and \
                 start_button_rect.collidepoint(mouse_pos):
+                # create a game object
+                game_obj = game()
+                
                 # change the game_state to game
-                game_state = "game"
+                game_state = 'game'
             elif event.type == pygame.MOUSEMOTION and start_button_rect.collidepoint(mouse_pos):
                 # change the color of start button to yellow
                 pygame.draw.rect(screen, 'yellow', start_button_rect, border_radius=20)
@@ -95,7 +99,7 @@ def main():
             pygame.display.update()
             
         # game page
-        elif game_state == "game":
+        elif game_state == 'game':
             ''' in the game page, user can see a mahjong table, user's mahjong 
                 tile will display one by one at the bottom of the screen, when 
                 user click one of its tile, the tile will be move up half its 
@@ -106,6 +110,11 @@ def main():
                 at least one player finished hu, then game will change to check
                 point page. 
             '''
+            # game start
+            if init_state == False:
+                game_obj.start_ju()
+                init_state = True
+            
             # clear the screen, black color
             pygame.draw.rect(screen, 'black', screen_rect)
             
@@ -116,14 +125,16 @@ def main():
             pygame.draw.rect(screen, inner_color, inner_rect)
             pygame.draw.rect(screen, 'brown', table_rect, width=25, border_radius=20)
             
-            # display the mahjong table at the left of screen
-            # screen.blit(game_background_image, (0, 0))
+            # show current player's tile
+            # print(game_obj.players[0].my_tiles)
+            screen.blit(tile_images[0][0], (100, 800))
+            print(tile_images[0][1])
             
             # update the display
             pygame.display.update()
             
         # check point page
-        elif game_state == "check_point":
+        elif game_state == 'check_point':
             ''' in the check point page, user can see how much points each player 
                 earns from winning the game, and also see the winner of the game.
                 After checking the points, user can click the continue button to 
@@ -134,7 +145,7 @@ def main():
             pass
         
         # end page
-        elif game_state == "end":
+        elif game_state == 'end':
             ''' in the end page, user can see the final score of each player, and 
                 the winner of the game. After the game is over, user can click next
                 button to start a new game or exit button to quit the game.
@@ -142,5 +153,5 @@ def main():
             
             pass
         
-if __name__=="__main__":
+if __name__=='__main__':
     main()
