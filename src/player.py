@@ -1,4 +1,6 @@
-from element import generate_tiles, mahjong_tile_elements, find_num_using_tile
+import pygame
+import gc
+from element import tile, generate_tiles, mahjong_tile_elements, find_num_using_tile
 
 all_tiles = generate_tiles()
 
@@ -31,6 +33,54 @@ class player:
         self.chi_peng_gang_tiles = chi_peng_gang_tiles
         self.my_waste = my_waste
 
+    # sort all tiles
+    def sort_tiles(self):
+        cur_list = []
+        for tile in self.my_tiles:
+            cur_list.append(tile.get_value_id())
+        cur_list.sort()
+        new_tiles = []
+        for value,id in cur_list:
+            for tile in self.my_tiles:
+                if tile.select_by_id(id) is not None:
+                    new_tiles.append(tile.select_by_id(id))
+        self.my_tiles = new_tiles
+        
+    
+    # display all my tiles
+    def display_my_tiles(self, surface):
+        x = 100
+        for i in range(len(self.my_tiles)):
+            tile_rect = self.my_tiles[i].img.get_rect(bottomleft=(25 + x, 900 - 25))
+            tile_rect = self.effects(self.my_tiles[i], tile_rect)
+            surface.blit(self.my_tiles[i].img, tile_rect)
+            x += 49
+            
+            
+    def effects(self, tile, tile_rect):
+        is_hover, is_selected = tile.get_effect()
+        if tile_rect[1] == 900 - 25 - 70:
+            is_hover = False
+        else:
+            is_hover = True
+        
+        # set a last_click to prevent quick double click
+        if tile_rect.collidepoint(pygame.mouse.get_pos()) and pygame.mouse.get_pressed()[0] and \
+            tile.last_click <= 0:
+            is_selected = not is_selected
+            tile.last_click = 5
+        tile.last_click -= 1
+        
+        # add hover and selected effect
+        if (tile_rect.collidepoint(pygame.mouse.get_pos()) and not is_hover) or is_selected:
+            tile_rect = tile_rect.move(0, -20)
+            
+        tile.set_effect(is_hover, is_selected)
+        return tile_rect
+    
+            
+    def display(self, surface):
+        pass
 
     # all the movement can be done by players integraded both
     # human and AI
@@ -47,15 +97,22 @@ class player:
         '''
         cur_tile = this_game.pop(0)
         self.my_tiles.append(cur_tile)
-        self.my_tiles.sort()
+        
+    
+    def sort(self):
+        pass
     
     
     # all movement
     def discard(self):
         if self.is_ai:
-            self.ai_discard()
+            selected_tile = self.ai_discard()
         else:
-            self.human_discard()
+            selected_tile = self.human_discard()
+        
+        # put selected tile into waste section
+        self.my_tiles.remove(selected_tile)
+        self.my_waste.append(selected_tile)
             
 
     def chi(self):
@@ -125,7 +182,6 @@ class player:
                 combo = []
                 type = current_tile[0] // 10
                 test_tiles = [tile for tile in self.my_tiles if (tile // 10) == type]
-                test_tiles = deal_red(test_tiles)
                 test_tiles.sort()
                 test_tile = current_tile[0] if (current_tile[0] % 10) != 0 else current_tile[0] + 5
                 if (test_tile - 2 in test_tiles) and (test_tile - 1 in test_tiles):
@@ -202,10 +258,7 @@ class player:
             >>> player1.check_hidden_gang()
             False
         '''
-        for tile in self.my_tiles:
-            four_con = x_continously(self.my_tiles, 4)
-            if four_con(tile):
-                return True
+        
         return False
 
 
@@ -221,12 +274,7 @@ class player:
             >>> player1.check_gang(current_tile)
             False
         '''
-        test_tiles = [tile for tile in self.my_tiles]
-        test_tiles.append(current_tile[0])
-        test_tiles = deal_red(test_tiles)
-        test_tiles.sort()
-        four_con = x_continously(test_tiles, 4)
-        return True if four_con(current_tile[0]) else False
+        return False
     
 
     def check_add_gang(self):
@@ -243,11 +291,6 @@ class player:
             >>> player1.check_add_gang()
             False
         '''
-        tiles = deal_red(self.my_tiles)
-        for group in self.chi_peng_gang_tiles:
-            check_group = deal_red(group[1])
-            if group[0] == 1 and (check_group[0] in tiles):
-                return True
         return False
 
 
@@ -263,15 +306,8 @@ class player:
             >>> player1.check_peng(current_tile)
             False
         '''
-        test_tiles = [tile for tile in self.my_tiles]
-        test_tiles.append(current_tile[0])
-        test_tiles = deal_red(test_tiles)
-        test_tiles.sort()
-        three_con = x_continously(test_tiles, 3)
-        if current_tile[0] % 10 == 0:
-            return True if three_con(current_tile[0] + 5) else False
-        else:
-            return True if three_con(current_tile[0]) else False
+
+        return False
 
 
     def check_riichi(self, this_game):
@@ -287,19 +323,12 @@ class player:
             >>> player1.check_riichi(this_game)
             True
         '''
-        test_tiles = [tile for tile in self.my_tiles]
-        test_tiles = deal_red(test_tiles)
-        for tile in range(len(test_tiles)):
-            for ele in this_game:
-                test_tiles.pop(tile)
-                test_tiles.append(ele)
-                if clear_win(test_tiles):
-                    return True
+
         return False
     
 
     def check_ting_pai(self, cur_tile):
-        return True if win(self.my_tiles + [cur_tile], self.chi_peng_gang_tiles) else False
+        return False
 
 
     def final_check_ting_pai(self):
@@ -308,10 +337,7 @@ class player:
             >>> player1.my_tiles, player1.chi_peng_gang_tiles = [1, 1, 1, 2, 2, 2], []
             >>>
         '''
-        check_tiles = [tile for tile in all_tiles if tile not in self.my_waste]
-        for tile in check_tiles:
-            if win(self.my_tiles + [tile], self.chi_peng_gang_tiles):
-                return True
+
         return False
 
 
@@ -332,23 +358,4 @@ class player:
             >>> player1.check_chi(current_tile)
             0
         '''
-        if current_tile[1] == (self.my_position - 1) or current_tile[1] == (self.my_position + 3):
-            tile_type = current_tile[0] // 10
-            valid_chi_list = [tile for tile in self.my_tiles if tile // 10 == tile_type]
-            valid_chi_list = deal_red(valid_chi_list)
-            valid_chi_list.sort()
-            if current_tile[0] > 30:
-                return 0
-            else:
-                cnt = 0
-                conds = [
-                    ((current_tile[0] - 2) in valid_chi_list) and ((current_tile[0] - 1) in valid_chi_list),
-                    ((current_tile[0] - 1) in valid_chi_list) and ((current_tile[0] + 1) in valid_chi_list),
-                    ((current_tile[0] + 1) in valid_chi_list) and ((current_tile[0] + 2) in valid_chi_list)
-                ]
-                for cond in conds:
-                    if cond:
-                        cnt += 1
-                return cnt
-        else:
-            return 0
+        return 0
