@@ -1,4 +1,6 @@
-from element import all_tiles, mahjong_tile_elements, find_num_using_tile
+from element import generate_tiles, mahjong_tile_elements, find_num_using_tile
+
+all_tiles = generate_tiles()
 
 # player class，包含属性：点数、手牌、自风、弃牌堆、是否为AI、吃碰杠堆
 # 函数：摸牌✅、弃牌✅、吃、碰、加杠、杠、暗杠、立直
@@ -19,7 +21,7 @@ class player:
     chi_peng_gang_tiles = []
     
 
-    def __init__(self, number=0, score=25000, tiles=[], position=0, is_ai=False, chi_peng_gang_tiles=[],
+    def __init__(self, number=0, score=25000, tiles=[], position=0, is_ai=True, chi_peng_gang_tiles=[],
                  my_waste=[]):
         self.number = number
         self.score = score
@@ -32,7 +34,7 @@ class player:
 
     # all the movement can be done by players integraded both
     # human and AI
-    def mopai(self, this_game, time_stamp):
+    def mopai(self, this_game):
         ''' remove the first item in this_game and add into my_tiles
 
         >>> player1 = player(0, [], 0)
@@ -46,7 +48,6 @@ class player:
         cur_tile = this_game.pop(0)
         self.my_tiles.append(cur_tile)
         self.my_tiles.sort()
-        self.write_behavior(time_stamp, 'mopai', cur_tile)
     
     
     # all movement
