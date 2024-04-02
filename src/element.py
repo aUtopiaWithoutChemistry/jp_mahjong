@@ -26,8 +26,6 @@
         for jp_mahjong ver -1.1
 '''
 
-all_tiles = []
-
 mahjong_tile_elements = {
     1: '1m', 2: '2m', 3: '3m', 4: '4m', 5: '5m', 6: '6m', 7: '7m', 8: '8m', 9: '9m',
     11: '1p', 12: '2p', 13: '3p', 14: '4p', 15: '5p', 16: '6p', 17: '7p', 18: '8p', 19: '9p',
@@ -40,9 +38,13 @@ find_num_using_tile = {v: k for k, v in mahjong_tile_elements.items()}
 
 key_list = list(mahjong_tile_elements.keys())
 
-for id in range(136):
-    value = key_list[id // 4]
-    all_tiles.append((value ,id))
+
+def generate_tiles():
+    all_tiles = []
+    for id in range(136):
+        value = key_list[id // 4]
+        all_tiles.append((value ,id))
+    return all_tiles
 
 red_dora_id = [19, 55, 91]
 
