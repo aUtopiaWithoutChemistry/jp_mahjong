@@ -1,5 +1,5 @@
 import random, math
-from element import generate_tiles
+from element import *
 from rules import win
 from player import player
 
@@ -42,7 +42,7 @@ class game:
     hidden_dora_tiles = []  # max 5, only show the same number of shown surface and gang dora
 
 
-    def __init__(self, total_chang=2, total_player=4):
+    def __init__(self, total_chang=2, total_player=4, SCREEN_HEIGHT=800):
         # decide how many chang in total should be played
         self.total_chang = total_chang
         self.total_player = total_player
@@ -51,17 +51,22 @@ class game:
         self.time_stamp = 0
 
         # add all mahjong tiles in this game
-        all_tiles = generate_tiles()
+        all_tiles = generate_tiles(SCREEN_HEIGHT)
         for ele in all_tiles:
             self.this_game.append(ele)
 
         positions = [0, 1, 2, 3]
+        
         # create n players
         for n in range(total_player):
             is_ai = False if n == 0 else True
             pos = positions.pop(math.floor(random.random() * len(positions)))
             self.players.append(player(number=n, position=pos, is_ai=is_ai))
 
+    
+    def update_all_tiles(self):
+        for i in range(len(self.this_game)):
+            tile(value='behind')
     
     def time_update(self):
         self.time_stamp += 1
