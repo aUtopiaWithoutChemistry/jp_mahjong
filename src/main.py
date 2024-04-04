@@ -1,8 +1,11 @@
 import pygame
 from game import game
 from element import generate_tiles
+from const import TILE_RATIO
 
 WIDTH, HEIGHT = 1200, 900
+EDGE = 20
+INNER_WIDTH = WIDTH - 2 * EDGE 
  
 # define a main function
 def main():
@@ -15,9 +18,10 @@ def main():
     pygame.display.set_icon(logo)
     pygame.display.set_caption('Aho Mahjong')
     
-    WIDTH, HEIGHT = pygame.display.get_desktop_sizes()[0]
-    
-    screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+    # WIDTH, HEIGHT = pygame.display.get_desktop_sizes()[0]
+    WIDTH, HEIGHT = 1200, 900
+    screen = pygame.display.set_mode((WIDTH, HEIGHT))
+    WIDTH, HEIGHT = screen.get_size()
     
     # create a surface on screen that has the size of 1280 x 960
     #screen = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -80,7 +84,7 @@ def main():
             if event.type == pygame.MOUSEBUTTONUP and event.button == 1 and \
                 start_button_rect.collidepoint(mouse_pos):
                 # create a game object
-                game_obj = game()
+                game_obj = game(SCREEN_HEIGHT=HEIGHT)
                 
                 # change the game_state to game
                 game_state = 'game'
@@ -114,12 +118,19 @@ def main():
             
             # draw the mahjong table
             table_rect = pygame.Rect(0, 0, HEIGHT, HEIGHT)
-            inner_rect = pygame.Rect(25, 25, HEIGHT - 50, HEIGHT - 50)
+            inner_rect = pygame.Rect(EDGE, EDGE, HEIGHT - EDGE * 2, HEIGHT - EDGE * 2)
             inner_color = pygame.Color(79, 164, 133)
             pygame.draw.rect(screen, inner_color, inner_rect)
-            pygame.draw.rect(screen, 'brown', table_rect, width=25, border_radius=20)
-            pygame.draw.line(screen, 'black', (25, 25), (900-25, 900-25))
-            pygame.draw.line(screen, 'black', (25, 900-25), (900-25, 25))
+            pygame.draw.rect(screen, 'brown', table_rect, width=EDGE, border_radius=EDGE)
+            pygame.draw.line(screen, 'black', (EDGE, EDGE), (HEIGHT - EDGE, HEIGHT - EDGE))
+            pygame.draw.line(screen, 'black', (EDGE, HEIGHT - EDGE), (HEIGHT - EDGE, EDGE))
+            
+            # draw the region contains all hidden tiles
+            hidden_tiles_rect = pygame.Rect(EDGE + HEIGHT // TILE_RATIO, EDGE + HEIGHT // TILE_RATIO,\
+                                            HEIGHT // TILE_RATIO * 0.7 * 17, HEIGHT // TILE_RATIO)
+            hidden_tiles_rect2 = hidden_tiles_rect.copy()
+            pygame.draw.rect(screen, 'black', hidden_tiles_rect, width=1)
+
             
             # show current player's tile
             game_obj.players[0].display_my_tiles(screen)
