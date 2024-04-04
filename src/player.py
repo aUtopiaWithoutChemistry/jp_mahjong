@@ -2,7 +2,7 @@ import pygame
 import gc
 from element import tile, generate_tiles, mahjong_tile_elements, find_num_using_tile
 
-all_tiles = generate_tiles()
+# all_tiles = generate_tiles()
 
 # player class，包含属性：点数、手牌、自风、弃牌堆、是否为AI、吃碰杠堆
 # 函数：摸牌✅、弃牌✅、吃、碰、加杠、杠、暗杠、立直
@@ -51,28 +51,33 @@ class player:
     def display_my_tiles(self, surface):
         x = 100
         for i in range(len(self.my_tiles)):
-            tile_rect = self.my_tiles[i].img.get_rect(bottomleft=(25 + x, 900 - 25))
+            tile_rect = self.my_tiles[i].img.get_rect(bottomleft=(25 + x, 900 - 20))
             tile_rect = self.effects(self.my_tiles[i], tile_rect)
             surface.blit(self.my_tiles[i].img, tile_rect)
-            x += 49
+            x += self.my_tiles[i].size[0]
             
             
     def effects(self, tile, tile_rect):
         is_hover, is_selected = tile.get_effect()
-        if tile_rect[1] == 900 - 25 - 70:
-            is_hover = False
-        else:
-            is_hover = True
+        # if tile_rect[1] == 900 - 20 - 70:
+        #     is_hover = False
+        # else:
+        #     is_hover = True
         
         # set a last_click to prevent quick double click
         if tile_rect.collidepoint(pygame.mouse.get_pos()) and pygame.mouse.get_pressed()[0] and \
             tile.last_click <= 0:
+            for tile_x in self.my_tiles:
+                tile_x.selected = False
             is_selected = not is_selected
-            tile.last_click = 5
+            tile.last_click = 4
         tile.last_click -= 1
         
+        # check if hover
+        is_hover = True if tile_rect.collidepoint(pygame.mouse.get_pos()) else False
+            
         # add hover and selected effect
-        if (tile_rect.collidepoint(pygame.mouse.get_pos()) and not is_hover) or is_selected:
+        if is_hover or is_selected:
             tile_rect = tile_rect.move(0, -20)
             
         tile.set_effect(is_hover, is_selected)
