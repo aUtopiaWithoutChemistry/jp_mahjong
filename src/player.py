@@ -1,30 +1,34 @@
 import pygame
-import gc
-from element import tile, generate_tiles, mahjong_tile_elements, find_num_using_tile
+from tile import Tile
+
 
 # all_tiles = generate_tiles()
 
 # player class，包含属性：点数、手牌、自风、弃牌堆、是否为AI、吃碰杠堆
 # 函数：摸牌✅、弃牌✅、吃、碰、加杠、杠、暗杠、立直
 # all check:吃、碰、加杠、杠、暗杠、立直 will be move into rules
-class player:
+class Player:
     number = 0
     is_ai = False
-    score = 0 # should start with 25000
-    my_tiles = [] # store all tiles of a player
+    score = 0  # should start with 25000
+    my_tiles = []  # store all tiles of a player
     my_position = -1
     my_waste = []
-    
+
     ''' tiles in chi_peng_gang_tiles will store in group, like
             [(10, [(1,0), (2,0), (3,0)]), (11, [(5,0), (5,), (5,0)]), (12, [(41,0), (41,0), (41,0), (41,0)]), (13, [(42,0), (42,0), (42,0), (42,0)])]
         each group contains two elements, the first represent it's type, 10 is chi, 11 is peng, 
         12 is gang, 13 is hidden_gang. the second element is a list shows all the tiles in this group.
     '''
     chi_peng_gang_tiles = []
-    
 
-    def __init__(self, number=0, score=25000, tiles=[], position=0, is_ai=True, chi_peng_gang_tiles=[],
-                 my_waste=[]):
+    def __init__(self, display, number=0, score=25000, tiles=[], position=0, is_ai=True, chi_peng_gang_tiles=None,
+                 my_waste=None):
+        if chi_peng_gang_tiles is None:
+            chi_peng_gang_tiles = []
+        if my_waste is None:
+            my_waste = []
+        self.display = display
         self.number = number
         self.score = score
         self.my_tiles = tiles
@@ -33,6 +37,9 @@ class player:
         self.chi_peng_gang_tiles = chi_peng_gang_tiles
         self.my_waste = my_waste
 
+    def get_my_tiles(self):
+        return (self.my_tiles, self.chi_peng_gang_tiles, self.my_waste)
+
     # sort all tiles
     def sort_tiles(self):
         cur_list = []
@@ -40,50 +47,71 @@ class player:
             cur_list.append(tile.get_value_id())
         cur_list.sort()
         new_tiles = []
-        for value,id in cur_list:
+        for value, id in cur_list:
             for tile in self.my_tiles:
                 if tile.select_by_id(id) is not None:
                     new_tiles.append(tile.select_by_id(id))
         self.my_tiles = new_tiles
-        
-    
+
     # display all my tiles
-    def display_my_tiles(self, surface):
+    def display_my_tiles(self, surface, HEIGHT, direction):
         x = 100
-        for i in range(len(self.my_tiles)):
-            tile_rect = self.my_tiles[i].img.get_rect(bottomleft=(25 + x, 900 - 20))
-            tile_rect = self.effects(self.my_tiles[i], tile_rect)
-            surface.blit(self.my_tiles[i].img, tile_rect)
-            x += self.my_tiles[i].size[0]
-            
-            
+        hidden_tile = Tile('hidden', 'hidden', HEIGHT)
+
+        if direction == 0:
+            for i in range(len(self.my_tiles)):
+                tile_rect = self.my_tiles[i].img.get_rect(bottomleft=(25 + x, HEIGHT - 20))
+                tile_rect = self.effects(self.my_tiles[i], tile_rect)
+                surface.blit(self.my_tiles[i].img, tile_rect)
+                x += self.my_tiles[i].size[0]
+        if direction == 1:
+            tile_surf = hidden_tile.img
+            tile_surf = pygame.transform.rotate(tile_surf, 90)
+            for i in range(len(self.my_tiles)):
+                tile_rect = self.my_tiles[i].img.get_rect(bottomright=(HEIGHT - 20 - 20, HEIGHT - 25 - x))
+                surface.blit(tile_surf, tile_rect)
+                x += hidden_tile.size[0]
+        if direction == 2:
+            tile_surf = hidden_tile.img
+            tile_surf = pygame.transform.rotate(tile_surf, 180)
+            for i in range(len(self.my_tiles)):
+                tile_rect = self.my_tiles[i].img.get_rect(topright=(HEIGHT - 25 - x, 20))
+                surface.blit(tile_surf, tile_rect)
+                x += hidden_tile.size[0]
+        if direction == 3:
+            tile_surf = hidden_tile.img
+            tile_surf = pygame.transform.rotate(tile_surf, 270)
+            for i in range(len(self.my_tiles)):
+                tile_rect = self.my_tiles[i].img.get_rect(topleft=(20, 25 + x))
+                surface.blit(tile_surf, tile_rect)
+                x += hidden_tile.size[0]
+
     def effects(self, tile, tile_rect):
         is_hover, is_selected = tile.get_effect()
         # if tile_rect[1] == 900 - 20 - 70:
         #     is_hover = False
         # else:
         #     is_hover = True
-        
+
         # set a last_click to prevent quick double click
         if tile_rect.collidepoint(pygame.mouse.get_pos()) and pygame.mouse.get_pressed()[0] and \
-            tile.last_click <= 0:
+                tile.last_click <= 0:
             for tile_x in self.my_tiles:
                 tile_x.selected = False
             is_selected = not is_selected
             tile.last_click = 4
         tile.last_click -= 1
-        
+
         # check if hover
         is_hover = True if tile_rect.collidepoint(pygame.mouse.get_pos()) else False
-            
+
         # add hover and selected effect
         if is_hover or is_selected:
             tile_rect = tile_rect.move(0, -20)
-            
+
         tile.set_effect(is_hover, is_selected)
         return tile_rect
-    
-            
+
     def display(self, surface):
         pass
 
@@ -102,44 +130,39 @@ class player:
         '''
         cur_tile = this_game.pop(0)
         self.my_tiles.append(cur_tile)
-        
-    
+
     def sort(self):
         pass
-    
-    
+
     # all movement
     def discard(self):
         if self.is_ai:
             selected_tile = self.ai_discard()
         else:
             selected_tile = self.human_discard()
-        
+
+        print(selected_tile)
         # put selected tile into waste section
         self.my_tiles.remove(selected_tile)
         self.my_waste.append(selected_tile)
-            
 
     def chi(self):
         if self.is_ai:
             self.ai_chi()
         else:
             self.human_chi()
-            
 
     def peng(self):
         if self.is_ai:
             self.ai_peng()
         else:
             self.human_peng()
-            
 
     def gang(self):
         if self.is_ai:
             self.ai_gang()
         else:
             self.human_gang()
-            
 
     def add_gang(self):
         if self.is_ai:
@@ -147,34 +170,28 @@ class player:
         else:
             self.human_add_gang()
 
-
     def hidden_gang(self):
         if self.is_ai:
             self.ai_hidden_gang()
         else:
             self.human_hidden_gang()
-            
 
     def riichi(self):
         if self.is_ai:
             self.ai_riichi()
         else:
             self.human_riichi()
-  
-        
+
     # human movements
     def human_discard(self):
         ''' remove the selected item from player's tiles and move it 
             into waste tiles
+            :param: self
+            :return: Tile
         '''
-        print("Here is all your tiles: ")
-        for tile in range(len(self.my_tiles)):
-            print(mahjong_tile_elements[self.my_tiles[tile]], end = " ")
-        print('')
-        discard_tile = input("Please select which tiles to discard: ")
-        tile_num = find_num_using_tile[discard_tile]
-        self.my_waste.append(self.my_tiles.pop(self.my_tiles.index(tile_num)))
-        return True
+        for tile in self.my_tiles:
+            if tile.selected:
+                return True
 
     def human_chi(self, current_tile):
         ''' if player on your left side discard a tile that can used by you to build a shun_zi
@@ -201,57 +218,44 @@ class player:
             else:
                 return False
 
-
-    def human_peng():
-        return False
-    
-
-    def human_gang():
-        return False
-    
-
-    def human_add_gang():
+    def human_peng(self):
         return False
 
-
-    def human_hidden_gang():
+    def human_gang(self):
         return False
 
-
-    def human_riichi():
+    def human_add_gang(self):
         return False
-    
+
+    def human_hidden_gang(self):
+        return False
+
+    def human_riichi(self):
+        return False
 
     # AI movements
     def ai_discard(self):
         return False
 
-
     def ai_chi(self):
         return False
-    
 
     def ai_peng(self):
         return False
-    
 
     def ai_gang(self):
         return False
-    
 
     def ai_add_gang(self):
         return False
 
-
     def ai_hidden_gang(self):
         return False
-
 
     def ai_riichi(self):
         return False
 
-
-    # check if a movement is valid 
+    # check if a movement is valid
     def check_hidden_gang(self):
         ''' check if have hidden gang using my tiles
 
@@ -263,9 +267,8 @@ class player:
             >>> player1.check_hidden_gang()
             False
         '''
-        
-        return False
 
+        return False
 
     def check_gang(self, current_tile):
         ''' check if could gang using other's waste tile
@@ -280,7 +283,6 @@ class player:
             False
         '''
         return False
-    
 
     def check_add_gang(self):
         ''' add_gang means player have one ke_zi in chi_pong_gang_tiles, and get the same tile
@@ -298,7 +300,6 @@ class player:
         '''
         return False
 
-
     def check_peng(self, current_tile):
         ''' check if could peng using other's waste tile
 
@@ -313,7 +314,6 @@ class player:
         '''
 
         return False
-
 
     def check_riichi(self, this_game):
         ''' riichi means player needs only one tile to win the game, after the player 
@@ -330,11 +330,9 @@ class player:
         '''
 
         return False
-    
 
     def check_ting_pai(self, cur_tile):
         return False
-
 
     def final_check_ting_pai(self):
         ''' ting pai means if get a specific tile, this player can win this game
@@ -344,7 +342,6 @@ class player:
         '''
 
         return False
-
 
     def check_chi(self, current_tile):
         ''' check_chi returns a value to represent if current player can chi the tile 
