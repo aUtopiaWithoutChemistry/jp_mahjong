@@ -1,23 +1,21 @@
-import random, math
-from element import *
-from rules import win
-from player import player
+import math
+import random
+
+from player import Player
+from rules import Rule
+
 
 # table class，包含四个玩家和剩余牌
-class game:
-    
-    ''' cur_tile is the tile that every player discard, if no one chi, peng, gang, hu, then this tile
+class Game:
+    """ cur_tile is the tile that every player discard, if no one chi, peng, gang, hu, then this tile
         goes into current player's waste tiles, clear cur_tile, waiting for next player discard
-    '''
-    cur_tile = ((-1, -1), -1) # the first tuple shows the tile, second shows where it from
-    cur_player = -1 # how many players in there
+    """
+    cur_tile = ((-1, -1), -1)  # the first tuple shows the tile, second shows where it from
+    cur_player = -1  # how many players in there
     total_chang = 0
-    cur_chang = -1
-    cur_ju = -1
-    time_stamp = -1
-    this_game = []
+
     players = []
-    
+
     ''' store all players behaviors in a total game 
         in the form of [ [(cur_chang, cur_ju), (0, 0's tiles), (1, 1's tiles), (2, 2's tiles), (3, 3's tiles),
                           (time stamp, player_number, behavior, on which tile)], [], []]
@@ -25,63 +23,59 @@ class game:
         be the initial tiles for player 0 to 3, from index six there will be every single move on the game,
         they should be in the form of (time_stamp, player, behavior, tile)
         
-        time_stamp is an attribute of game, it will renew in each new game, and increament when every movement have been 
+        time_stamp is an attribute of game, it will renew in each new game, and increment when every movement have been 
         down.
         
-        behavior can be 'mopai', 'chi', 'peng', 'gang', 'add_gang', 'hidden_gang', 'discard', 'riichi', 'zimo', 'rong_hu', 'liu_ju'
+        behavior can be 'mopai', 'chi', 'peng', 'gang', 'add_gang', 'hidden_gang', 'discard', 'riichi', 'zimo', 
+        'rong_hu', 'liu_ju'
         
         tile should be in the form of (value, id)
     '''
-    all_behaviors = []       
+    all_behaviors = []
 
-    ace = []                # 14 in total, lingshang and dora tiles are in this
-    ling_shang_tiles = []   # max 4, only can be access when someone gang
-    
-    surface_dora_tiles = [] # max 1, visable from starting
-    gang_dora_tiles = []    # max 4, every gang from player will show one more
-    hidden_dora_tiles = []  # max 5, only show the same number of shown surface and gang dora
+    ace = []  # 14 in total, lingshang and dora tiles are in this
+    dora = [] # contains all the dora tile that player could check
 
-
-    def __init__(self, total_chang=2, total_player=4, SCREEN_HEIGHT=800):
+    def __init__(self, display, total_chang=2, all_tiles=None):
         # decide how many chang in total should be played
         self.total_chang = total_chang
-        self.total_player = total_player
         self.cur_chang = -1
         self.cur_ju = -1
         self.time_stamp = 0
+        self.display = display
+        self.all_tiles = all_tiles
+        self.ruler = Rule(game=self)
+        self.time_stamp = -1
+        self.this_game = []
 
-        # add all mahjong tiles in this game
-        all_tiles = generate_tiles(SCREEN_HEIGHT)
-        for ele in all_tiles:
-            self.this_game.append(ele)
-
-        positions = [0, 1, 2, 3]
-        
         # create n players
-        for n in range(total_player):
+        positions = [0, 1, 2, 3]
+        for n in range(4):
             is_ai = False if n == 0 else True
             pos = positions.pop(math.floor(random.random() * len(positions)))
-            self.players.append(player(number=n, position=pos, is_ai=is_ai))
+            self.players.append(Player(number=n, position=pos, is_ai=is_ai, display=self.display))
 
-    
-    def update_all_tiles(self):
-        for i in range(len(self.this_game)):
-            tile(value='behind')
-    
+    def get_dora(self):
+        return self.dora
+
+    def get_all_behaviors(self):
+        return self.all_behaviors
+
+    def get_this_game(self):
+        return self.this_game
+
     def time_update(self):
         self.time_stamp += 1
         return self.time_stamp
-    
 
     def shuffle(self):
         random.shuffle(self.this_game)
 
-
     def end(self, end_type, cur_players):
-        ''' check which type of end is this game, players is a list, shows which player 
+        """ check which type of end is this game, players is a list, shows which player
             and how many players can win, then call the check point function then transfer
-            points to end current game 
-        '''
+            points to end current game
+        """
         if end_type == 'liuju':
             ''' when liuju, game() will pass all four players in a list to end method
                 we should check which one is in the status of ting_pai, so that they can get
@@ -96,14 +90,14 @@ class game:
                 return False
             elif len(ting_pai) == 1:
                 for i in range(3):
-                    self.transfer_point(1000, send[i], ting_pai[0])
+                    self.transfer_point(1000, send[i])
             elif len(ting_pai) == 2:
                 for i in range(2):
-                    self.transfer_point(1000, send[i], ting_pai[i])
+                    self.transfer_point(1000, send[i])
             elif len(ting_pai) == 3:
                 for i in range(3):
-                    self.transfer_point(1000, send[0], ting_pai[i])
-                
+                    self.transfer_point(1000, send[0])
+
         elif end_type == 'zimo':
             ''' when zimo, game() will pass a list have single item which is the player
                 who finished his tile. Other should give to that player 1/3 of this player's
@@ -115,64 +109,63 @@ class game:
             points_from_other = math.ceil(total_point // 100 / 3) * 100
             for i in range(3):
                 if send[i].my_position == self.cur_chang:
-                    self.transfer_point(points_from_other, send[i], cur_players[0])
-            
+                    self.transfer_point(points_from_other, send[i])
+
         elif end_type == 'ronghu':
             ''' when ronghu, game will pass a list that contains the loser and all other winner,
                 loser should pay full score that winner made
             '''
             loser, winners = cur_players[0], cur_players[1:]
             points = []
-            for winner in winners:
+            winner: object
+            for _ in winners:
                 points += 0
-            for i in range(len(winner)):
-                self.transfer_point(points[i], loser, winner[i])
-    
+            for i in range(len(winners)):
+                self.transfer_point(points[i], loser)
 
-    def transfer_point(send_points, from_who, to_whom):
-        from_who.score -= send_points
-        to_whom.score += send_points
-    
+    def transfer_point(self, send_points, from_who, to_whom=0):
+        pass
 
     def next_player(self, player):
-        ''' both player and ju should in [0, 3]
+        """ both player and ju should in [0, 3]
             if reach 3, then next should be 0
 
-            >>> game1 = game(1, 4)
-            >>> game1.cur_player.index() = 2
-            >>> game1.cur_player = game1.next_item(game1.cur_player)
+            >>> game1 = Game(1, 4)
+            >>> game1.cur_player.index()
+            2
+            >>> game1.cur_player = game1.next_player(game1.cur_player)
             >>> game1.cur_player.index()
             3
-            >>> game1.cur_player = game1.next_item(game1.cur_player)
+            >>> game1.cur_player = game1.next_player(game1.cur_player)
             >>> game1.cur_player.index()
             0
-        '''
+        """
         index = self.players.index(player)
         return self.players[index + 1] if index < 3 else self.players[0]
-    
 
-    def gaming(self, cur_player, remain_tiles, storage_place):
-        ''' game is a recursive method, it only finished when one
+    def gaming(self, cur_player=0, remain_tiles=None, storage_place=0):
+        """ game is a recursive method, it only finished when one
             player wins or run out of tiles
-        '''
-        
+        """
+
         #   if there are no tiles in remain_tiles, weather there's no tile in
         #   this_game, or there's no tile in 岭上 tiles, which means there are
         #   four gang in a single game, both will lead to 流局    
+        if remain_tiles is None:
+            remain_tiles = self.this_game
         if len(remain_tiles) <= 0:
             self.end('liuju', self.players)
             return True
 
-        # read player's tiles
-        player_tiles = cur_player.my_tiles
-        player_chi_peng_gang_tiles = cur_player.chi_peng_gang_tiles
+        # set current player
+        self.ruler.set_player(self.players[cur_player])
 
         # mopai this will change remain_tiles
         cur_player.mopai(remain_tiles)
         self.time_stamp += 1
 
         # check if zimo
-        if win(player_tiles, player_chi_peng_gang_tiles):
+        if self.ruler.win(cur_player):
             self.end('zimo', [cur_player])
             return True
 
@@ -187,9 +180,9 @@ class game:
         if cur_player.check_add_gang():
             cur_player.add_gang()
             self.time_stamp += 1
-            
+
             ting_pai_player = [player for player in self.players if player.check_ting_pai()]
-            if ting_pai_player != []:
+            if ting_pai_player:
                 self.end('ronghu', [cur_player] + ting_pai_player)
                 return True
 
@@ -197,17 +190,17 @@ class game:
             self.gaming(cur_player, remain_tiles, storage_place)
 
         # check riichi
-        if cur_player.check_riichi():
+        if cur_player.check_riichi(self.this_game):
             cur_player.riichi()
             self.time_stamp += 1
-        else: 
+        else:
             cur_player.discard()
             self.time_stamp += 1
 
         # check if current discarded tile in th list of other player ting_pai tiles
         self.cur_tile = (cur_player.my_waste[len(cur_player.my_waste) - 1], self.players.index(cur_player))
         ting_pai_player = [player for player in self.players if player.check_ting_pai()]
-        if ting_pai_player != []:
+        if ting_pai_player:
             self.end('ronghu', [cur_player] + ting_pai_player)
             return True
 
@@ -218,27 +211,26 @@ class game:
                 self.time_stamp += 1
                 remain_tiles = self.ling_shang_tiles
                 self.gaming(player, remain_tiles, storage_place)
-            
+
             if player.check_peng():
                 player.peng()
                 self.time_stamp += 1
                 self.gaming(player, remain_tiles, storage_place)
-            
+
             if player.check_chi():
                 player.chi()
                 self.time_stamp += 1
                 self.gaming(player, remain_tiles, storage_place)
-        
+
         cur_player = self.next_player(cur_player)
         self.gaming(cur_player, remain_tiles, storage_place)
-        
 
     def start_ju(self):
-        ''' setup all the stuff for a new ju in this game
-        '''
+        """ setup all the stuff for a new ju in this game
+        """
         if self.cur_ju != 3:
             self.cur_ju += 1
-        else: 
+        else:
             self.cur_ju = 0
             self.cur_chang += 1
             if self.cur_chang > self.total_chang:
@@ -247,7 +239,7 @@ class game:
 
         # the index in all_behaviors for this game
         storage_place = self.cur_chang * 4 + self.cur_ju
-        
+
         # add all mahjong tiles in this game
         all_tiles = []
         for ele in all_tiles:
@@ -258,9 +250,9 @@ class game:
 
         # prepare for ace tiles
         self.ace = []
-        self.ling_shang_tiles = [] 
+        self.ling_shang_tiles = []
         self.surface_dora_tiles = []
-        self.hidden_dora_tiles = [] 
+        self.hidden_dora_tiles = []
         self.gang_dora_tiles = []
 
         for i in range(14):
@@ -275,21 +267,19 @@ class game:
             self.players[i].my_tiles = []
             self.players[i].my_waste = []
             self.players[i].chi_peng_gang_tiles = []
-        
+
         # every player get 14 tiles
         for i in range(14):
             for n in range(4):
                 self.players[n].mopai(self.this_game)
-                
-        self.time_stamp = 0
-        # self.game(self.players[0], self.this_game, storage_place)
 
+        self.time_stamp = 0
+        self.gaming(self.players[0], self.this_game, storage_place)
 
     # TODO
-    def store_game():
-        return False
-    
-    
-    # TODO 
-    def reply():
-        return False
+    def store_game(self):
+        pass
+
+    # TODO
+    def reply(self):
+        pass
