@@ -3,6 +3,7 @@ import random
 
 from player import Player
 from rules import Rule
+from tile import generate_tiles
 
 
 # table class，包含四个玩家和剩余牌
@@ -13,8 +14,12 @@ class Game:
     cur_tile = ((-1, -1), -1)  # the first tuple shows the tile, second shows where it from
     cur_player = -1  # how many players in there
     total_chang = 0
-
+    this_game = []
     players = []
+
+    # when player need time to respond, then interval will be start
+    # countdown by 10
+    interval = 0
 
     ''' store all players behaviors in a total game 
         in the form of [ [(cur_chang, cur_ju), (0, 0's tiles), (1, 1's tiles), (2, 2's tiles), (3, 3's tiles),
@@ -36,24 +41,24 @@ class Game:
     ace = []  # 14 in total, lingshang and dora tiles are in this
     dora = [] # contains all the dora tile that player could check
 
-    def __init__(self, display, total_chang=2, all_tiles=None):
+    def __init__(self, total_chang=2, all_tiles=None, SCREEN_HEIGHT=0):
         # decide how many chang in total should be played
         self.total_chang = total_chang
         self.cur_chang = -1
         self.cur_ju = -1
         self.time_stamp = 0
-        self.display = display
         self.all_tiles = all_tiles
         self.ruler = Rule(game=self)
         self.time_stamp = -1
         self.this_game = []
+        self.SCREEN_HEIGHT = SCREEN_HEIGHT
 
         # create n players
         positions = [0, 1, 2, 3]
         for n in range(4):
             is_ai = False if n == 0 else True
             pos = positions.pop(math.floor(random.random() * len(positions)))
-            self.players.append(Player(number=n, position=pos, is_ai=is_ai, display=self.display))
+            self.players.append(Player(number=n, position=pos, is_ai=is_ai))
 
     def get_dora(self):
         return self.dora
@@ -61,8 +66,26 @@ class Game:
     def get_all_behaviors(self):
         return self.all_behaviors
 
+    def get_cur_chang(self):
+        return self.cur_chang
+
     def get_this_game(self):
         return self.this_game
+
+    def get_status(self):
+        pass
+
+    def countdown(self, time_interval):
+        """
+        a countdown method for player to making decision
+        :param time_interval: int
+        """
+        from time import sleep
+        self.interval = time_interval
+        while self.interval > 0:
+            sleep(1)  # Delay for 1 second
+            self.interval -= 1
+        print("Time's up!")
 
     def time_update(self):
         self.time_stamp += 1
@@ -143,29 +166,31 @@ class Game:
         index = self.players.index(player)
         return self.players[index + 1] if index < 3 else self.players[0]
 
-    def gaming(self, cur_player=0, remain_tiles=None, storage_place=0):
-        """ game is a recursive method, it only finished when one
-            player wins or run out of tiles
+    def gaming(self, remain_tiles):
+        """
+        game is a recursive method, it only finished when one
+        player wins or run out of tiles
+        if there are no tiles in remain_tiles, weather there's no tile in
+        this_game, or there's no tile in 岭上 tiles, which means there are
+        four gang in a single game, both will lead to 流局
         """
 
-        #   if there are no tiles in remain_tiles, weather there's no tile in
-        #   this_game, or there's no tile in 岭上 tiles, which means there are
-        #   four gang in a single game, both will lead to 流局    
-        if remain_tiles is None:
-            remain_tiles = self.this_game
+        # set cur_player as the player object
+        cur_player = self.players[self.cur_player]
+
         if len(remain_tiles) <= 0:
             self.end('liuju', self.players)
             return True
 
         # set current player
-        self.ruler.set_player(self.players[cur_player])
+        self.ruler.set_player(cur_player)
 
         # mopai this will change remain_tiles
         cur_player.mopai(remain_tiles)
         self.time_stamp += 1
 
         # check if zimo
-        if self.ruler.win(cur_player):
+        if self.ruler.win():
             self.end('zimo', [cur_player])
             return True
 
@@ -174,7 +199,7 @@ class Game:
             cur_player.hidden_gang()
             self.time_stamp += 1
             remain_tiles = self.ling_shang_tiles
-            self.gaming(cur_player, remain_tiles, storage_place)
+            self.gaming(self.ace)
 
         # check add_gang
         if cur_player.check_add_gang():
@@ -187,13 +212,14 @@ class Game:
                 return True
 
             remain_tiles = self.ling_shang_tiles
-            self.gaming(cur_player, remain_tiles, storage_place)
+            self.gaming(self.ace)
 
         # check riichi
         if cur_player.check_riichi(self.this_game):
             cur_player.riichi()
             self.time_stamp += 1
         else:
+            self.countdown(5)
             cur_player.discard()
             self.time_stamp += 1
 
@@ -210,20 +236,20 @@ class Game:
                 player.gang()
                 self.time_stamp += 1
                 remain_tiles = self.ling_shang_tiles
-                self.gaming(player, remain_tiles, storage_place)
+                self.gaming(self.this_game)
 
             if player.check_peng():
                 player.peng()
                 self.time_stamp += 1
-                self.gaming(player, remain_tiles, storage_place)
+                self.gaming(self.this_game)
 
             if player.check_chi():
                 player.chi()
                 self.time_stamp += 1
-                self.gaming(player, remain_tiles, storage_place)
+                self.gaming(self.this_game)
 
-        cur_player = self.next_player(cur_player)
-        self.gaming(cur_player, remain_tiles, storage_place)
+        self.cur_player = self.next_player(cur_player)
+        self.gaming(self.this_game)
 
     def start_ju(self):
         """ setup all the stuff for a new ju in this game
@@ -241,7 +267,7 @@ class Game:
         storage_place = self.cur_chang * 4 + self.cur_ju
 
         # add all mahjong tiles in this game
-        all_tiles = []
+        all_tiles = generate_tiles(self.SCREEN_HEIGHT)
         for ele in all_tiles:
             self.this_game.append(ele)
 
@@ -274,7 +300,8 @@ class Game:
                 self.players[n].mopai(self.this_game)
 
         self.time_stamp = 0
-        self.gaming(self.players[0], self.this_game, storage_place)
+        # self.count_down(5)
+        # self.gaming(self.this_game)
 
     # TODO
     def store_game(self):
