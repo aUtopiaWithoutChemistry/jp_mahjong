@@ -73,6 +73,8 @@ class Tile:
     def select_by_id(self, id):
         if id == self.id:
             return self
+        else:
+            return None
 
     def get_value_id(self):
         return self.value, self.id
