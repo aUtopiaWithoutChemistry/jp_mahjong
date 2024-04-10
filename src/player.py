@@ -22,13 +22,14 @@ class Player:
     '''
     chi_peng_gang_tiles = []
 
-    def __init__(self, display, number=0, score=25000, tiles=[], position=0, is_ai=True, chi_peng_gang_tiles=None,
+    def __init__(self, number=0, score=25000, tiles=None, position=0, is_ai=True, chi_peng_gang_tiles=None,
                  my_waste=None):
+        if tiles is None:
+            tiles = []
         if chi_peng_gang_tiles is None:
             chi_peng_gang_tiles = []
         if my_waste is None:
             my_waste = []
-        self.display = display
         self.number = number
         self.score = score
         self.my_tiles = tiles
@@ -38,10 +39,22 @@ class Player:
         self.my_waste = my_waste
 
     def get_my_tiles(self):
-        return (self.my_tiles, self.chi_peng_gang_tiles, self.my_waste)
+        """ return all the tiles including tiles on hand, tiles shown, and waste tiles
+            :return: list, list, list
+        """
+        return self.my_tiles, self.chi_peng_gang_tiles, self.my_waste
+
+    def get_my_position(self):
+        return self.my_position
+
+    def get_my_number(self):
+        return self.number
 
     # sort all tiles
     def sort_tiles(self):
+        """
+        sort all tile in my hand
+        """
         cur_list = []
         for tile in self.my_tiles:
             cur_list.append(tile.get_value_id())
@@ -54,63 +67,59 @@ class Player:
         self.my_tiles = new_tiles
 
     # display all my tiles
-    def display_my_tiles(self, surface, HEIGHT, direction):
-        x = 100
-        hidden_tile = Tile('hidden', 'hidden', HEIGHT)
-
-        if direction == 0:
-            for i in range(len(self.my_tiles)):
-                tile_rect = self.my_tiles[i].img.get_rect(bottomleft=(25 + x, HEIGHT - 20))
-                tile_rect = self.effects(self.my_tiles[i], tile_rect)
-                surface.blit(self.my_tiles[i].img, tile_rect)
-                x += self.my_tiles[i].size[0]
-        if direction == 1:
-            tile_surf = hidden_tile.img
-            tile_surf = pygame.transform.rotate(tile_surf, 90)
-            for i in range(len(self.my_tiles)):
-                tile_rect = self.my_tiles[i].img.get_rect(bottomright=(HEIGHT - 20 - 20, HEIGHT - 25 - x))
-                surface.blit(tile_surf, tile_rect)
-                x += hidden_tile.size[0]
-        if direction == 2:
-            tile_surf = hidden_tile.img
-            tile_surf = pygame.transform.rotate(tile_surf, 180)
-            for i in range(len(self.my_tiles)):
-                tile_rect = self.my_tiles[i].img.get_rect(topright=(HEIGHT - 25 - x, 20))
-                surface.blit(tile_surf, tile_rect)
-                x += hidden_tile.size[0]
-        if direction == 3:
-            tile_surf = hidden_tile.img
-            tile_surf = pygame.transform.rotate(tile_surf, 270)
-            for i in range(len(self.my_tiles)):
-                tile_rect = self.my_tiles[i].img.get_rect(topleft=(20, 25 + x))
-                surface.blit(tile_surf, tile_rect)
-                x += hidden_tile.size[0]
-
-    def effects(self, tile, tile_rect):
-        is_hover, is_selected = tile.get_effect()
-        # if tile_rect[1] == 900 - 20 - 70:
-        #     is_hover = False
-        # else:
-        #     is_hover = True
-
-        # set a last_click to prevent quick double click
-        if tile_rect.collidepoint(pygame.mouse.get_pos()) and pygame.mouse.get_pressed()[0] and \
-                tile.last_click <= 0:
-            for tile_x in self.my_tiles:
-                tile_x.selected = False
-            is_selected = not is_selected
-            tile.last_click = 4
-        tile.last_click -= 1
-
-        # check if hover
-        is_hover = True if tile_rect.collidepoint(pygame.mouse.get_pos()) else False
-
-        # add hover and selected effect
-        if is_hover or is_selected:
-            tile_rect = tile_rect.move(0, -20)
-
-        tile.set_effect(is_hover, is_selected)
-        return tile_rect
+    # def display_my_tiles(self, surface, HEIGHT, direction):
+    #     x = 100
+    #     hidden_tile = Tile('hidden', 'hidden', HEIGHT)
+    #
+    #     if direction == 0:
+    #         for i in range(len(self.my_tiles)):
+    #             tile_rect = self.my_tiles[i].img.get_rect(bottomleft=(25 + x, HEIGHT - 20))
+    #             tile_rect = self.effects(self.my_tiles[i], tile_rect)
+    #             surface.blit(self.my_tiles[i].img, tile_rect)
+    #             x += self.my_tiles[i].size[0]
+    #     if direction == 1:
+    #         tile_surf = hidden_tile.img
+    #         tile_surf = pygame.transform.rotate(tile_surf, 90)
+    #         for i in range(len(self.my_tiles)):
+    #             tile_rect = self.my_tiles[i].img.get_rect(bottomright=(HEIGHT - 20 - 20, HEIGHT - 25 - x))
+    #             surface.blit(tile_surf, tile_rect)
+    #             x += hidden_tile.size[0]
+    #     if direction == 2:
+    #         tile_surf = hidden_tile.img
+    #         tile_surf = pygame.transform.rotate(tile_surf, 180)
+    #         for i in range(len(self.my_tiles)):
+    #             tile_rect = self.my_tiles[i].img.get_rect(topright=(HEIGHT - 25 - x, 20))
+    #             surface.blit(tile_surf, tile_rect)
+    #             x += hidden_tile.size[0]
+    #     if direction == 3:
+    #         tile_surf = hidden_tile.img
+    #         tile_surf = pygame.transform.rotate(tile_surf, 270)
+    #         for i in range(len(self.my_tiles)):
+    #             tile_rect = self.my_tiles[i].img.get_rect(topleft=(20, 25 + x))
+    #             surface.blit(tile_surf, tile_rect)
+    #             x += hidden_tile.size[0]
+    #
+    # def effects(self, tile, tile_rect):
+    #     is_hover, is_selected = tile.get_effect()
+    #
+    #     # set a last_click to prevent quick double click
+    #     if tile_rect.collidepoint(pygame.mouse.get_pos()) and pygame.mouse.get_pressed()[0] and \
+    #             tile.last_click <= 0:
+    #         for tile_x in self.my_tiles:
+    #             tile_x.selected = False
+    #         is_selected = not is_selected
+    #         tile.last_click = 4
+    #     tile.last_click -= 1
+    #
+    #     # check if hover
+    #     is_hover = True if tile_rect.collidepoint(pygame.mouse.get_pos()) else False
+    #
+    #     # add hover and selected effect
+    #     if is_hover or is_selected:
+    #         tile_rect = tile_rect.move(0, -20)
+    #
+    #     tile.set_effect(is_hover, is_selected)
+    #     return tile_rect
 
     def display(self, surface):
         pass
@@ -141,10 +150,11 @@ class Player:
         else:
             selected_tile = self.human_discard()
 
-        print(selected_tile)
+        # print(selected_tile)
         # put selected tile into waste section
-        self.my_tiles.remove(selected_tile)
-        self.my_waste.append(selected_tile)
+        if selected_tile is not None:
+            self.my_tiles.remove(selected_tile)
+            self.my_waste.append(selected_tile)
 
     def chi(self):
         if self.is_ai:
